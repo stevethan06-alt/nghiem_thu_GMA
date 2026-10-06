@@ -26,12 +26,12 @@ table.gr{border-collapse:collapse;min-width:2000px}
 #pv{margin-top:12px;overflow-x:auto}.pg.ck{font-size:11.5px;line-height:1.15}.pg.ck table{table-layout:fixed}.pg.ck td{padding:1px 4px;vertical-align:middle}.pg.ck table.sig td{vertical-align:top}#gst{font-size:12px;color:var(--mu);margin:6px 0 0}
 #lg{position:fixed;inset:0;background:var(--bg);z-index:10;overflow:auto;display:none}#lg .box{max-width:360px;margin:12vh auto;background:var(--pn);border:1px solid var(--bd);border-radius:10px;padding:18px}#snd{font-weight:600}
 /* trang A4 */
-.pg{background:#fff;color:#000;width:210mm;height:297mm;overflow:hidden;margin:0 auto 12px;padding:var(--mt,12mm) var(--mr,12mm) var(--mb,12mm) var(--ml,20mm);font-family:"Times New Roman",Times,serif;font-size:var(--fs,12.5px);line-height:var(--lh,1.4);page-break-after:always;border:1px solid #bbb}
+.pg{background:#fff;color:#000;width:210mm;height:297mm;overflow:hidden;margin:0 auto 12px;padding:var(--mt,12mm) var(--mr,12mm) var(--mb,12mm) var(--ml,20mm);font-family:"Times New Roman",Times,serif;font-size:var(--fs,12.5px);line-height:var(--lh,1.4);border:1px solid #bbb}
 .pg h2{text-align:center;font-size:16px;margin:10px 0 2px}.c{text-align:center}.r{text-align:right}.b{font-weight:700}
 .pg table{width:100%;border-collapse:collapse}.pg td,.pg th{border:1px solid #000;padding:3px 5px;vertical-align:top}
 .pg table.nb td{border:0;padding:1px 3px}.sig td{border:0;text-align:center;height:90px;vertical-align:top;width:50%}
 .pg p{margin:calc((var(--lh,1.4) - 1)*7px) 0;text-align:justify}.pg p.r{text-align:right}.pg .gap{height:6px}.pg small{font-size:11px}
-@media print{#pv{overflow:visible}@page{size:A4;margin:0}body{background:#fff}.np{display:none!important}.app{padding:0;max-width:none}.pg{margin:0;border:0;width:210mm;height:297mm;overflow:hidden}.pg:last-child{page-break-after:auto;break-after:auto}}
+@media print{@page{size:A4;margin:0}html,body{width:210mm;margin:0;padding:0;background:#fff}#pv{display:block;margin:0;overflow:visible}.np{display:none!important}.app{width:210mm;max-width:none;margin:0;padding:0}.pg{box-sizing:border-box;display:block;position:relative;float:none;clear:both;width:210mm;height:296mm;min-height:0;margin:0;padding:var(--mt,12mm) var(--mr,12mm) var(--mb,12mm) var(--ml,20mm);overflow:hidden;border:0;page-break-after:auto;break-after:auto;page-break-inside:avoid;break-inside:avoid}.pg+.pg{page-break-before:always;break-before:page}}
 </style></head><body><div id="lg" class="np"><div class="box"><h1>Đăng nhập</h1><p class="sub">Dữ liệu hồ sơ của bạn được tải về sau khi đăng nhập.</p>
 <div><label>URL Web App (Apps Script)</label><input id="lu" autocomplete="off"></div>
 <div style="margin-top:8px"><label>ID người dùng</label><input id="li" autocomplete="username"></div>
