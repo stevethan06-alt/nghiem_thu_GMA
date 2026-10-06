@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hồ sơ nghiệm thu - nhập một lần, xuất PDF hàng loạt</title>
+<style>
+:root{--bg:#f3f5f4;--pn:#fff;--tx:#1d2723;--mu:#5d6b65;--bd:#cfd8d3;--ac:#0f6b55;--ac2:#e8f3ef;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#141a18;--pn:#1d2522;--tx:#e6ece9;--mu:#9aa8a1;--bd:#34413c;--ac:#4cc3a3;--ac2:#1f3a32}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 "Be Vietnam Pro","Segoe UI",system-ui,sans-serif}
+.app{max-width:1400px;margin:auto;padding:14px}
+h1{font-size:20px;margin:0 0 2px}.sub{color:var(--mu);margin:0 0 12px}
+details,.bar{background:var(--pn);border:1px solid var(--bd);border-radius:8px;margin-bottom:10px}
+summary{padding:10px 12px;cursor:pointer;font-weight:600}.in{padding:0 12px 12px}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+label{display:block;font-size:12px;color:var(--mu)}
+input,select,textarea{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:5px;padding:5px 6px}
+textarea{min-height:90px;font-size:12px}
+button{font:inherit;cursor:pointer;border:1px solid var(--ac);background:var(--ac);color:#fff;border-radius:6px;padding:7px 12px}
+button.s{background:transparent;color:var(--ac)}button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.bar{padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:end}.bar>div{min-width:140px}
+.tw{overflow-x:auto;max-height:55vh;border:1px solid var(--bd);border-radius:8px;background:var(--pn)}
+table.gr{border-collapse:collapse;min-width:2000px}
+.gr th{position:sticky;top:0;background:var(--ac2);font-size:12px;padding:6px;border:1px solid var(--bd);white-space:nowrap}
+.gr td{border:1px solid var(--bd);padding:0}.gr td input{border:0;border-radius:0;background:transparent;min-width:90px}
+.gr td.n{padding:4px 8px;text-align:center;white-space:nowrap}
+#pv{margin-top:12px;overflow-x:auto}.pg.ck{font-size:11.5px;line-height:1.15}.pg.ck table{table-layout:fixed}.pg.ck td{padding:1px 4px;vertical-align:middle}.pg.ck table.sig td{vertical-align:top}#gst{font-size:12px;color:var(--mu);margin:6px 0 0}
+#lg{position:fixed;inset:0;background:var(--bg);z-index:10;overflow:auto;display:none}#lg .box{max-width:360px;margin:12vh auto;background:var(--pn);border:1px solid var(--bd);border-radius:10px;padding:18px}#snd{font-weight:600}
+/* trang A4 */
+.pg{background:#fff;color:#000;width:210mm;height:297mm;overflow:hidden;margin:0 auto 12px;padding:var(--mt,12mm) var(--mr,12mm) var(--mb,12mm) var(--ml,20mm);font-family:"Times New Roman",Times,serif;font-size:var(--fs,12.5px);line-height:var(--lh,1.4);page-break-after:always;border:1px solid #bbb}
+.pg h2{text-align:center;font-size:16px;margin:10px 0 2px}.c{text-align:center}.r{text-align:right}.b{font-weight:700}
+.pg table{width:100%;border-collapse:collapse}.pg td,.pg th{border:1px solid #000;padding:3px 5px;vertical-align:top}
+.pg table.nb td{border:0;padding:1px 3px}.sig td{border:0;text-align:center;height:90px;vertical-align:top;width:50%}
+.pg p{margin:calc((var(--lh,1.4) - 1)*7px) 0;text-align:justify}.pg p.r{text-align:right}.pg .gap{height:6px}.pg small{font-size:11px}
+@media print{#pv{overflow:visible}@page{size:A4;margin:0}body{background:#fff}.np{display:none!important}.app{padding:0;max-width:none}.pg{margin:0;border:0;width:210mm;height:297mm;overflow:hidden}.pg:last-child{page-break-after:auto;break-after:auto}}
+</style></head><body><div id="lg" class="np"><div class="box"><h1>Đăng nhập</h1><p class="sub">Dữ liệu hồ sơ của bạn được tải về sau khi đăng nhập.</p>
+<div><label>URL Web App (Apps Script)</label><input id="lu" autocomplete="off"></div>
+<div style="margin-top:8px"><label>ID người dùng</label><input id="li" autocomplete="username"></div>
+<div style="margin-top:8px"><label>Mật khẩu</label><input id="lp" type="password" autocomplete="current-password"></div>
+<p id="lm" style="color:#c0392b;min-height:18px;margin:8px 0"></p><button id="lb" style="width:100%">Đăng nhập</button></div></div><div class="app">
+<div class="np">
+<h1>Hồ sơ nghiệm thu</h1><p class="sub">Điền dữ liệu ở bảng, biên bản bên dưới cập nhật ngay và tự lưu về Google Sheet. Chọn số thứ tự rồi xuất PDF.</p>
+<div class="bar np" style="align-items:center"><b id="who"></b><span id="sync" style="flex:1;color:var(--mu);min-width:200px">…</span><button id="snd">Gửi dữ liệu về Google</button><button class="s" id="rl">Tải lại từ Google</button><button class="s" id="cf" style="display:none">Ghi đè bằng bản của tôi</button><button class="s" id="lo">Đăng xuất</button></div>
+<div class="bar np" style="align-items:center">Hiển thị dòng từ <input id="va" type="number" min="1" style="width:80px"> đến <input id="vb" type="number" min="1" style="width:80px"> / tổng <b id="vt">0</b> dòng <button class="s" id="vp">‹ Trước</button><button class="s" id="vn">Sau ›</button><button class="s" id="vall">Tất cả</button></div>
+<details open><summary>1. Thông tin chung (dùng cho mọi biên bản)</summary><div class="in"><div class="g" id="gl"></div></div></details>
+<details><summary>2. Checklist mẫu (sửa nội dung nếu cần)</summary><div class="in"><div class="g">
+<div><label>Checklist 1 – dòng "#số|tiêu đề" là mục lớn; dòng thường: "Việt // English | V/M/L" (V mắt thường, M thước, L laser)</label><textarea id="ck1" rows="12"></textarea></div>
+<div><label>Checklist 2</label><textarea id="ck2" rows="12"></textarea></div>
+<div><label>Tên checklist 1 / 2 (tiêu đề đầu trang)</label><input id="ckt1"><input id="ckt2" style="margin-top:6px"></div></div></div></details>
+<details><summary>3. In ấn: lề giấy và dãn dòng</summary><div class="in"><div class="g">
+<div><label>Lề trên (mm)</label><input type="number" min="0" max="40" step="1" data-m="t"></div><div><label>Lề dưới (mm)</label><input type="number" min="0" max="40" step="1" data-m="b"></div>
+<div><label>Lề trái (mm)</label><input type="number" min="0" max="45" step="1" data-m="l"></div><div><label>Lề phải (mm)</label><input type="number" min="0" max="40" step="1" data-m="r"></div>
+<div><label><input type="checkbox" data-m="fit" style="width:auto"> Tự dãn dòng cho vừa 1 trang A4 (thu nhỏ chữ nếu dài quá)</label></div></div></div></details>
+<div class="bar">
+<div><button id="add">+ Thêm dòng</button> <button class="s" id="paste">Dán từ Excel</button> <button class="s" id="clr">Xóa hết</button></div>
+</div>
+<div class="tw"><table class="gr"><thead id="th"></thead><tbody id="tb"></tbody></table></div>
+<div class="bar">
+<div><label>Chọn số thứ tự (vd: 1-100 hoặc 1,3,5-8; để trống = tất cả)</label><input id="rng" placeholder="1-100"></div>
+<div><label>Loại biên bản</label>
+<label><input type="checkbox" class="ty" value="y" checked style="width:auto"> Phiếu YCNT</label>
+<label><input type="checkbox" class="ty" value="n" checked style="width:auto"> BBNT nội bộ</label>
+<label><input type="checkbox" class="ty" value="b" checked style="width:auto"> BBNT công việc</label>
+<label><input type="checkbox" class="ty" value="c" checked style="width:auto"> Checklist</label></div>
+<div><label>Thứ tự in</label><select id="ord"><option value="r">Theo từng đợt (YCNT→NB→BBNT→Check của số 1, rồi số 2…)</option><option value="t">Theo loại (tất cả YCNT, rồi tất cả NB…)</option></select></div>
+<div><button id="pdf">Xuất PDF</button></div>
+<small style="color:var(--mu);flex-basis:100%">Bấm “Xuất PDF” → hộp thoại in → chọn “Lưu dưới dạng PDF”, khổ A4, lề “None”, tắt “Headers and footers”.</small>
+</div></div>
+<div id="pv-status" class="np" style="margin:8px 0;color:var(--mu);font-size:12px"></div><div id="pv"></div></div>
+<script>
+const K='hsnt_v1';
+const GF=[['duan','Dự án','CHUNG CƯ CÔ GIANG, PHƯỜNG CẦU ÔNG LÃNH - KHU CĂN HỘ VÀ TRUNG TÂM THƯƠNG MẠI- GRAND MANHATTAN (GMA.Q1)'],['goi','Gói thầu / Hạng mục','CUNG CẤP VÀ THI CÔNG NHÔM KÍNH'],['dd','Địa điểm','100 CÔ GIANG, PHƯỜNG CẦU ÔNG LÃNH, THÀNH PHỐ HỒ CHÍ MINH'],['tp','Thành phố (dòng ngày)','Thành phố Hồ Chí Minh'],['cdt','Chủ đầu tư','CÔNG TY CỔ PHẦN PHÁT TRIỂN ĐẤT VIỆT'],['tv','Đơn vị TVGS','CÔNG TY TNHH TƯ VẤN VÀ ĐẦU TƯ XÂY DỰNG QUỐC TẾ (ICIC)'],['tgd','Tên người TVGS ký (mặc định, dòng nào để trống sẽ dùng tên này)',''],['tgc','Chức vụ người TVGS','Tư vấn giám sát'],['nt','Nhà thầu','CÔNG TY CỔ PHẦN THƯƠNG MẠI DỊCH VỤ XÂY DỰNG E&C'],['ch','Chỉ huy trưởng','Trần Minh Hiếu'],['cv','Chức vụ đại diện NT','Chỉ huy trưởng'],['hd','Hợp đồng thi công','09/2021/HDTC/GMA.Q1'],['pr','Tiền tố mã hồ sơ YCNT','GMA.Q1-E&C-RFIs'],['pc','Tiền tố mã BBNT/Checklist','GMA.Q1-E&C-CWI-FA'],['pd','Mã dự án','GMA.Q1'],['kt','Cán bộ kỹ thuật (bên mời NT)','Thân Văn Bình']];
+const VL='Số/No: 811/211 LAS-XD 498 | 13/04/2022\nSố/No: 812/10 LAS-XD 498 | 13/04/2022\nSố/No: 811/212 LAS-XD 498 | 13/04/2022\nSố/No: 811/213 LAS-XD 498 | 13/04/2022\nSố/No: WINWALLVN-CO22-07-WD | 28/04/2022';
+const C1='#I|Kiểm tra trước khi thi công // Checked before commence\nTiêu chuẩn kỹ thuật được phê duyệt // Approved spec.|V\nMẫu được phê duyệt // Approved sample|V\nBản vẽ thi công được phê duyệt // Approved Shop Drawing|V\nĐánh dấu // Setting out|M\n#II|Kiểm tra chung // General\nKiểm tra độ dài-rộng-dày // Check length - width - thickness|M\nĐộ vuông góc các góc khung // Frame corners squareness|M\nLớp nhựa chèn tiếp xúc tường // Bitumen coating on frames|V\nKhung không cong, xoắn, móp, nứt // Frame free from twist, bow, dents, cracks|V\nVị trí neo khung // Frame anchor position|V\n#III|Lắp đặt // Installation\nĐường nằm ngang phù hợp đường đánh dấu // Horizontal level line|L\nĐộ nghiêng thanh đứng (sai số 3mm+1) // Vertical inclination (tol. 3mm+1)|L\nChốt chặn gỗ đầy đủ // Wood wedges and strutting provided|V\nKhe hở khung-tường trám vữa // Gaps grouted with cement mortar|V\n#IV|Sau khi lắp đặt // After installation\nĐược bảo vệ bằng vật liệu hợp lý // Protected by suitable material|V';
+const C2='#I|Kiểm tra trước khi thi công // Checked before commence\nTiêu chuẩn kỹ thuật được phê duyệt // Approved spec.|V\nMẫu được phê duyệt // Approved sample|V\nBản vẽ thi công được phê duyệt // Approved Shop Drawing|V\n#II|Kiểm tra chung // General\nSự thẳng hàng của khung cửa // Door frame alignment|M\nKhoảng hở trong sai số cho phép // Gaps within tolerance|M\nBản lề và ốc vít đúng trật tự // Hinges and screw in order|V\nỔ khóa hoạt động tốt // Lockset functioning|V\nTay nắm // Handle|V\n#III|Sau khi lắp đặt // After installation\nĐược bảo vệ bằng vật liệu hợp lý // Protected by suitable material|V\nVệ sinh // Cleaning|V';
+const COLS=[['ten','Tên công việc','Nghiệm thu lắp đặt'],['ma','Mã công tác','PO-4,5,6'],['hm','Hạng mục',''],['vt','Vị trí',''],['gui','Ngày gửi YCNT','d'],['ns','NTNB bắt đầu','13h00'],['ne','NTNB kết thúc','14h00'],['nd','Ngày NTNB','d'],['ts','NT bắt đầu','14h00'],['te','NT kết thúc','15h00'],['td','Ngày NT','d'],['so','Số biên bản (trống = STT)',''],['bv','Bản vẽ tham chiếu','GMA.Q1.E&C-SDS-043-REV-01'],['tg','TVGS viên',''],['gs','Cán bộ KT hiện trường',''],['ck','Checklist (1/2)','1']];
+let S;
+if(!S)S={g:{},rows:[],ck1:C1,ck2:C2,t1:'LẮP DỰNG KHUNG CỬA // DOOR/WINDOW FRAME INSTALLATION',t2:'LẮP ĐẶT CỬA // DOOR/WINDOW INSTALLATION',vl:VL};
+S.g=S.g||{};S.m=Object.assign({t:12,b:12,l:20,r:12,fit:1},S.m||{});GF.forEach(f=>{if(S.g[f[0]]==null)S.g[f[0]]=f[2]});
+const $=i=>document.getElementById(i),ls=()=>{try{if(UID)localStorage.setItem('hsnt_d_'+UID,JSON.stringify({s:S,rev:REV,dirty:dirty}))}catch(e){}},sv=()=>{push();ls();ap()};
+const nr=()=>{const r={};COLS.forEach(c=>r[c[0]]=c[2]=='d'?'':c[2]);return r};
+function ui0(){
+$('gl').innerHTML=GF.map(f=>`<div><label>${f[1]}</label><input data-g="${f[0]}" value="${esc(S.g[f[0]])}"></div>`).join('')+`<div style="grid-column:1/-1"><label>Tài liệu nghiệm thu vật liệu – mỗi dòng "Số/No | Ngày" (dùng cho BBNT nội bộ)</label><textarea id="vl">${esc(S.vl)}</textarea></div>`;
+$('ck1').value=S.ck1;$('ck2').value=S.ck2;$('ckt1').value=S.t1;$('ckt2').value=S.t2;
+$('th').innerHTML='<tr><th>STT</th>'+COLS.map(c=>`<th>${c[1]}</th>`).join('')+'<th></th></tr>';
+$('tb').innerHTML=S.rows.map((r,i)=>i<VA-1||i>=VB?'':`<tr><td class="n">${i+1}</td>${COLS.map(c=>`<td><input data-r="${i}" data-k="${c[0]}" ${c[2]=='d'?'type="date"':''} value="${esc(r[c[0]])}"></td>`).join('')}<td class="n"><button class="s" data-dup="${i}">Nhân bản</button> <button class="s" data-del="${i}">Xóa</button></td></tr>`).join('')}
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+document.addEventListener('input',e=>{const t=e.target;
+if(t.dataset.g)S.g[t.dataset.g]=t.value;else if(t.dataset.r!=null)S.rows[t.dataset.r][t.dataset.k]=t.value;
+else if(t.id=='vl')S.vl=t.value;else if(t.id=='ck1')S.ck1=t.value;else if(t.id=='ck2')S.ck2=t.value;else if(t.id=='ckt1')S.t1=t.value;else if(t.id=='ckt2')S.t2=t.value;sv()});
+document.addEventListener('click',e=>{const t=e.target;
+if(t.dataset.del!=null){S.rows.splice(t.dataset.del,1);sv();ui()}
+if(t.dataset.dup!=null){S.rows.splice(+t.dataset.dup+1,0,{...S.rows[t.dataset.dup]});sv();ui()}});
+$('add').onclick=()=>{const l=S.rows[S.rows.length-1];S.rows.push(l?{...l,so:''}:nr());if(S.rows.length>VB){const w=VB-VA;VB=S.rows.length;VA=Math.max(1,VB-w)}sv();ui()};
+$('clr').onclick=()=>{if(confirm('Xóa toàn bộ dòng dữ liệu?')){S.rows=[];sv();ui()}};
+$('paste').onclick=()=>{const t=prompt('Dán các dòng copy từ Excel (đúng thứ tự cột như bảng, ngày dạng dd/mm/yyyy):');if(!t)return;
+t.split(/\r?\n/).filter(x=>x.trim()).forEach(l=>{const v=l.split('\t'),r=nr();COLS.forEach((c,i)=>{let x=(v[i]||'').trim();if(c[2]=='d'){const m=x.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);x=m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:''}r[c[0]]=x||r[c[0]]});S.rows.push(r)});sv();ui()};
+/* ---- sinh biên bản ---- */
+const G=()=>S.g,F=d=>d?d.split('-').reverse().join('/'):'…/…/…',P=d=>d?d.split('-'):['…','…','…'];
+const nl=s=>esc(s).replace(/\n/g,'<br>'),dots='……………………………………';
+const hd=(d,t)=>`<div class="c b">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br>Độc lập - Tự do - Hạnh phúc<br><small class="b" style="font-weight:400">THE SOCIALIST REPUBLIC OF VIET NAM<br>Independence - Freedom - Happiness</small><br>.........o0o.........</div><p class="r"><i>${esc(G().tp)}, Ngày/date: ${F(d)}</i></p>`;
+const tg=r=>r.tg||S.g.tgd||'……………………';
+const so=(r,i)=>r.so||i+1;
+const mh=(r,i)=>G().pr+'-'+r.ma+'-'+so(r,i),mb=(r,i)=>G().pc+'-'+r.ma+'-'+so(r,i),mn=r=>G().pc+'- '+r.ma;
+const nd=r=>[r.ten,r.hm,r.vt].filter(Boolean).join(' ');
+const info=()=>`<p><b>Dự án/Project:</b> ${esc(G().duan)}</p><p><b>Gói thầu/Package:</b> ${esc(G().goi)}</p><p><b>Địa điểm/Location:</b> ${esc(G().dd)}</p><p><b>Hạng mục/Items:</b> ${esc(G().goi)}</p>`;
+const sig=(a,b,na,nb)=>`<table class="sig"><tr><td><b>${a}</b><br><br><br><br><br>${nl(na)}</td><td><b>${b}</b><br><br><br><br><br>${nl(nb)}</td></tr></table>`;
+const ctN=(r)=>`Full name: ${G().ch}\nPosition: ${G().cv}`;
+function ycnt(r,i){return `<div class="pg">${hd(r.gui)}<h2>PHIẾU YÊU CẦU NGHIỆM THU CÔNG VIỆC</h2><p class="c"><p style="text-align: center; font-style: italic; font-weight: bold;">
+  REQUEST FOR INSPECTION
+</p></p>
+<p style="text-align: center;"><b>Số/No:</b> ${esc(mh(r,i))}</p>${info()}
+<p>Sau khi đã kiểm tra và tự nghiệm thu nội bộ công việc xây dựng, nội dung thể hiện trong biên bản nghiệm thu nội bộ số: ${esc(mn(r))}, ngày ${F(r.nd)}, Nhà thầu đề nghị Tư vấn giám sát nghiệm thu công việc sau:</p>
+<p><i>After the examination and internal inspection, the content shown in the internal inspection record No: ${esc(mn(r))}, date ${F(r.nd)}, the Contractor requests the Supervisor to inspect the following work:</i></p>
+<table style="margin:8px 0"><tr><th style="width:45%">Nội dung công tác nghiệm thu / Work Descriptions</th><th>Địa điểm / Location</th><th>Thời gian / Time</th></tr><tr><td>${esc(nd(r))}</td><td>${esc(r.vt)}</td><td>${esc(r.ts)} ngày ${F(r.td)}</td></tr></table>
+<p>- Thời gian tổ chức nghiệm thu/Time of inspection: Ngày/day ${P(r.td)[2]} tháng/month ${P(r.td)[1]} Năm/year ${P(r.td)[0]}</p><div class="gap"></div>
+${sig('ĐẠI DIỆN TƯ VẤN GIÁM SÁT<br>Supervisor Consultant’s Rep','ĐẠI DIỆN NHÀ THẦU THI CÔNG<br>Contractor’s Rep','Full name: '+tg(r)+'\nPosition: '+G().tgc,ctN())}</div>`}
+const base=r=>`<p><b>Gói thầu/Package:</b> ${esc(G().goi)}</p><p><b>Địa điểm/Location:</b> ${esc(G().dd)}</p><p><b>Hạng mục/Item:</b> ${esc(G().goi)}</p><p><b>1. Đối tượng nghiệm thu/Acceptance work item:</b> ${esc(nd(r))}</p>`;
+const tail=(r,s,e,d)=>`<p><b>3. Thời gian nghiệm thu/Time of inspection:</b></p><p>Bắt đầu/Start: ${esc(s)} ngày/date ${P(d)[2]} tháng/month ${P(d)[1]} năm/year ${P(d)[0]}</p><p>Kết thúc/Finish: ${esc(e)} ngày/date ${P(d)[2]} tháng/month ${P(d)[1]} năm/year ${P(d)[0]}</p><p>Tại công trình/Location: ${esc(G().dd)}</p><p><b>4. Căn cứ nghiệm thu/Technical documents:</b></p>`;
+const std=`<p>- Hồ sơ thiết kế bản vẽ thi công đã được CĐT phê duyệt/Approved detailed design drawings;</p><p>- Tiêu chuẩn, quy phạm xây dựng áp dụng: Theo QCVN và bộ tiêu chuẩn được CĐT chấp thuận/Applied building standards;</p><p>- Chỉ dẫn kỹ thuật/Specification of construction;</p><p>- Biên bản nghiệm thu vật liệu, thiết bị trước khi sử dụng/Material acceptance minutes;</p>`;
+const qual=`<p><b>b) Chất lượng công việc/Quality of the work:</b></p><p>- So với thiết kế: Thi công theo đúng thiết kế được duyệt/Comply with the approved design.</p><p>- So với yêu cầu kỹ thuật: Đạt yêu cầu kỹ thuật của công trình/Comply with technical requirements.</p><p><b>5. Kết luận/Conclusion:</b> Chấp nhận nghiệm thu công tác thi công. Đồng ý cho triển khai các công việc tiếp theo/Acceptance of construction work. Agree to execute next construction work.</p>`;
+function nb(r,i){const vl=S.vl.split('\n').filter(x=>x.trim()).map(x=>{const p=x.split('|');return `<p>${esc(p[0].trim())} &nbsp;&nbsp; Ngày/Date: ${esc((p[1]||'').trim())}</p>`}).join('');
+return `<div class="pg">${hd(r.nd)}<p style="text-align: center;"><b>Biên bản số/Minutes No:</b> ${esc(mn(r))}</p><h2>NGHIỆM THU NỘI BỘ CÔNG VIỆC XÂY DỰNG</h2>${base(r)}
+<p><b>2. Thành phần tham gia/Participants:</b></p><p>Đại diện Bộ phận quản lý công trình: Ông/Mr ${esc(G().ch)} – Chức vụ/Position: ${esc(G().cv)}</p><p>Đại diện Bộ phận thi công: Ông/Mr ${esc(r.gs)} – Chức vụ/Position: Kỹ thuật</p>
+${tail(r,r.ns,r.ne,r.nd)}${std}${vl}<p>- Hợp đồng thi công/Contract: ${esc(G().hd)}</p>${qual}
+${sig('ĐẠI DIỆN BỘ PHẬN QUẢN LÝ<br>Management Rep','ĐẠI DIỆN BỘ PHẬN THI CÔNG<br>Contractor’s Rep',ctN(),'Full name: '+r.gs+'\nPosition: Kỹ thuật')}</div>`}
+function bb(r,i){return `<div class="pg">${hd(r.td)}<p style="text-align: center;"><b>Biên bản số/Minutes No:</b> ${esc(mb(r,i))}</p><h2>NGHIỆM THU CÔNG VIỆC XÂY DỰNG</h2>${base(r)}
+<p><b>2. Thành phần tham gia/Participants:</b></p><p>Đại diện TVGS/Supervisor’s Rep: ${esc(G().tv)}<br>Ông/Mr ${esc(tg(r))} – Chức vụ/Position: ${esc(G().tgc)}</p><p>Đại diện nhà thầu/Contractor’s Rep: ${esc(G().nt)}<br>Ông/Mr ${esc(G().ch)} – Chức vụ/Position: ${esc(G().cv)}</p>
+${tail(r,r.ts,r.te,r.td)}<p>- Phiếu yêu cầu nghiệm thu số/Request No: ${esc(mh(r,i))} – Ngày ${F(r.gui)}</p><p>- Biên bản nghiệm thu nội bộ số/Internal record No: ${esc(mn(r))} – Ngày ${F(r.nd)}</p>${std}<p>- Hợp đồng thi công/Contract: ${esc(G().hd)}</p>${qual}
+${sig('ĐẠI DIỆN TƯ VẤN GIÁM SÁT<br>Supervisor Consultant’s Rep','ĐẠI DIỆN NHÀ THẦU THI CÔNG<br>Contractor’s Rep','Tên/Full name: '+tg(r)+'\nChức vụ/Position: '+G().tgc,ctN())}</div>`}
+const MT={V:'Mắt thường<br>Visual',M:'Thước<br>Measure',L:'Máy laser<br>Laser level'};
+function ck(r,i){const two=r.ck=='2',L=(two?S.ck2:S.ck1).split('\n').filter(x=>x.trim());let n=0,rows='';
+const h=Math.max(8,Math.min(16,Math.floor((297-S.m.t-S.m.b-115)/L.length)));
+L.forEach(l=>{const t=`<tr style="height:${h}mm">`;if(l[0]=='#'){const p=l.slice(1).split('|');n=0;rows+=`${t}<td class="c b">${esc(p[0])}</td><td class="b">${esc(p[1]||'').replace('//','<br>')}</td><td></td><td></td><td></td><td></td><td></td></tr>`}else{const p=l.split('|');n++;rows+=`${t}<td class="c">${n}</td><td>${esc(p[0]).replace('//','<br>')}</td><td class="c">${MT[(p[1]||'V').trim()]||''}</td><td></td><td></td><td></td><td></td></tr>`}});
+const g=G(),T=(two?S.t2:S.t1).replace('//','\n');
+return `<div class="pg ck"><table><colgroup><col style="width:15%"><col style="width:35%"><col style="width:15%"><col style="width:35%"></colgroup>
+<tr><td colspan="3"><b>DỰ ÁN/PROJECT: ${esc(g.duan)}</b></td><td class="c b">E&C</td></tr><tr><td colspan="4" class="c b" style="font-size:14px;height:12mm">${nl(T)}</td></tr>
+<tr><td>Chủ đầu tư<br>Investor</td><td>${esc(g.cdt)}</td><td>Mã dự án<br>Project code</td><td>${esc(g.pd)}</td></tr>
+<tr><td>Tư vấn giám sát<br>Consultant</td><td>${esc(g.tv)}</td><td>Số hồ sơ<br>DOC No</td><td>${esc(mb(r,i))}</td></tr>
+<tr><td>Nhà thầu<br>Contractor</td><td>${esc(g.nt)}</td><td>Bản vẽ<br>Drawing ref.</td><td>${esc(r.bv)}</td></tr>
+<tr><td>Vị trí NT<br>Location</td><td colspan="3">${esc(r.vt)}</td></tr><tr><td>Hạng mục NT<br>Item</td><td colspan="3">${esc(r.hm||r.ten)}</td></tr></table>
+<table style="margin-top:-1px"><colgroup><col style="width:7%"><col style="width:39%"><col style="width:14%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:13%"></colgroup>
+<tr class="c b"><td rowspan="2">Stt<br>No.</td><td rowspan="2">Diễn giải công việc<br>Description</td><td rowspan="2">Phương pháp<br>Method</td><td colspan="3">Kiểm tra / Checking</td><td rowspan="2">Chữ ký/Tên/Ngày<br>Sig./Name/Date</td></tr><tr class="c b"><td>Lần 1<br>1st</td><td>Lần 2<br>2nd</td><td>Lần 3<br>3rd</td></tr>${rows}</table>
+<p style="margin-top:4px"><b>Ý kiến/Comment:</b></p><div style="height:4mm"></div>
+<table class="sig"><tr><td style="height:40mm"><b>Bên mời nghiệm thu<br>Inspected & Submitted by</b><br><br><br><br><br><br><br>Tên/Name: ${esc(r.gs||g.kt)}<br>Chức vụ: Cán bộ kỹ thuật &nbsp; Ngày/Date: ${F(r.td)}</td><td style="height:40mm"><b>Bên nghiệm thu<br>Inspected by</b><br><br><br><br><br><br><br>Tên/Name: ${esc(tg(r))}<br>Chức vụ: ${esc(G().tgc)} &nbsp; Ngày/Date: ${F(r.td)}</td></tr></table></div>`}
+const FN={y:ycnt,n:nb,b:bb,c:ck};
+function sel(){const n=S.rows.length,t=$('rng').value.trim(),o=new Set();
+if(!t)for(let i=0;i<n;i++)o.add(i);else t.split(/[,;\s]+/).forEach(p=>{const m=p.match(/^(\d+)(?:-(\d+))?$/);if(m){const a=+m[1],b=+(m[2]||m[1]);for(let k=Math.min(a,b);k<=Math.max(a,b);k++)if(k>=1&&k<=n)o.add(k-1)}});
+return[...o].sort((a,b)=>a-b)}
+ui();
+
+const CFG0={url:'https://script.google.com/macros/s/AKfycbx13YZZxkbggnueggZf7EtUpNyInAvTWKjy6i2xlAujfolrawzLkA4Wetn-d3TvwpIr/exec'}; /* điền sẵn URL Web App ở đây nếu đưa trang lên web cho cả team */
+let CF={};try{CF=JSON.parse(localStorage.getItem('hsnt_cfg'))||{}}catch(e){}CF=Object.assign({},CFG0,CF);
+var TK='',UID='',UNAME='',REV=0,FORCE=false;
+async function call(act,p){const r=await fetch(CF.url.trim(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:act,token:TK,rev:REV,force:FORCE},p))});
+const j=await r.json();if(!j.ok){const e=new Error(j.error||'lỗi');e.code=j.error;throw e}if(j.rev)REV=j.rev;return j}
+function mk(){let ok=()=>{},bad=()=>{};const o={withSuccessHandler(f){ok=f;return o},withFailureHandler(f){bad=f;return o},loadAll(){call('load').then(ok,bad)},saveAll(p){call('save',p).then(ok,bad)}};return o}
+const mkG=()=>CF.url?{withSuccessHandler:f=>mk().withSuccessHandler(f),withFailureHandler:f=>mk().withFailureHandler(f)}:null;
+const EM={badlogin:'Sai ID hoặc mật khẩu',locked:'Tài khoản đã bị khóa',toomany:'Nhập sai quá nhiều lần, thử lại sau 10 phút',session:'Phiên đăng nhập đã hết hạn'};
+const em=e=>e&&EM[e.code]?EM[e.code]:(e&&e.message==='Failed to fetch'?'không kết nối được tới URL (kiểm tra URL /exec và quyền “Bất kỳ ai”)':(e&&e.message||e));
+var GAS=null,ready=false,busy=false,dirty=false,pushT=0,apT=0,cur=0,VA=1,VB=50;
+const stat=t=>{$('sync').textContent=t};
+const nz=x=>String(x||'').trim().toLowerCase(),F2=d=>d?d.split('-').reverse().join('/'):'';
+const iso=x=>{x=(x||'').trim();let m=x.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;m=x.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:''};
+/* xem trước tự động: mặc định chỉ dựng dòng đang nhập (tối đa 12 trang); xuất PDF dựng đủ */
+function build(full){const ty=[...document.querySelectorAll('.ty:checked')].map(x=>x.value),st=$('pv-status'),blank=!$('rng').value.trim();
+if(!S.rows.length){st.textContent='';$('pv').innerHTML='<p class="np">Chưa có dòng dữ liệu. Bấm “+ Thêm dòng”.</p>';return 0}
+if(!ty.length){st.textContent='Chưa chọn loại biên bản.';$('pv').innerHTML='';return 0}
+let ix=sel();if(!full&&blank)ix=[Math.min(cur,S.rows.length-1)];
+if(!ix.length){st.textContent='Không có STT phù hợp.';$('pv').innerHTML='';return 0}
+let h=[];if($('ord').value=='r')ix.forEach(i=>ty.forEach(t=>h.push(FN[t](S.rows[i],i))));else ty.forEach(t=>ix.forEach(i=>h.push(FN[t](S.rows[i],i))));
+const tot=h.length;if(!full&&tot>12)h=h.slice(0,12);
+$('pv').innerHTML=h.join('');if(!full)fit();
+st.textContent=`Xem trước STT ${ix.length>6?ix[0]+1+'…'+(ix[ix.length-1]+1):ix.map(i=>i+1).join(', ')} · ${h.length}/${tot} trang`+(!full&&blank?' (đang theo dòng bạn nhập; để trống ô số thứ tự thì xuất PDF in tất cả)':'');return h.length}
+function am(){const p=$('pv').style,m=S.m;p.setProperty('--mt',m.t+'mm');p.setProperty('--mb',m.b+'mm');p.setProperty('--ml',m.l+'mm');p.setProperty('--mr',m.r+'mm')}
+function mi(){document.querySelectorAll('[data-m]').forEach(i=>{const v=S.m[i.dataset.m];if(i.type=='checkbox')i.checked=!!v;else i.value=v})}
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.m;if(!k)return;S.m[k]=e.target.type=='checkbox'?(e.target.checked?1:0):(+e.target.value||0);am();sv()});
+function fp(pg){let fs=12.5;const st=(a,b)=>{pg.style.setProperty('--fs',a+'px');pg.style.setProperty('--lh',b)};
+const fits=()=>pg.lastElementChild.getBoundingClientRect().bottom<=pg.getBoundingClientRect().bottom-parseFloat(getComputedStyle(pg).paddingBottom)+0.5;
+st(fs,1.15);while(!fits()&&fs>9.5){fs-=0.25;st(fs,1.15)}
+let lo=1.15,hi=2;for(let i=0;i<7;i++){const mid=(lo+hi)/2;st(fs,mid);if(fits())lo=mid;else hi=mid}st(fs,lo)}
+function fit(){const L=[...document.querySelectorAll('#pv .pg:not(.ck)')];
+if(!S.m.fit){L.forEach(p=>{p.style.removeProperty('--fs');p.style.removeProperty('--lh')});return Promise.resolve()}
+return new Promise(res=>{let i=0;(function step(){const e=Math.min(i+8,L.length);for(;i<e;i++)fp(L[i]);if(i<L.length)setTimeout(step,0);else res()})()})}
+function ap(){clearTimeout(apT);apT=setTimeout(()=>build(),250)}
+$('rng').addEventListener('input',ap);$('ord').addEventListener('change',ap);document.querySelectorAll('.ty').forEach(x=>x.addEventListener('change',ap));
+document.addEventListener('focusin',e=>{const r=e.target.dataset&&e.target.dataset.r;if(r!=null&&+r!==cur){cur=+r;ap()}});
+$('pdf').onclick=()=>{if(build(true))fit().then(()=>setTimeout(()=>window.print(),150))};
+window.addEventListener('afterprint',()=>build());
+/* đồng bộ Google Sheet – đăng nhập theo người dùng, gửi thủ công */
+function mark(){$('snd').textContent=(dirty?'● ':'')+'Gửi dữ liệu về Google'}
+function payload(){return{data:[COLS.map(c=>c[1])].concat(S.rows.map(r=>COLS.map(c=>c[2]=='d'?F2(r[c[0]]):(r[c[0]]||'')))),chung:[['Khóa','Giá trị']].concat(GF.map(f=>[f[0],S.g[f[0]]||''])).concat([['vl',S.vl],['ck1',S.ck1],['ck2',S.ck2],['t1',S.t1],['t2',S.t2],['mg',[S.m.t,S.m.b,S.m.l,S.m.r,S.m.fit].join(',')]])}}
+function push(){if(!GAS||!ready)return;dirty=true;mark();stat('● Có thay đổi chưa gửi lên Google – bấm “Gửi dữ liệu về Google”.')}
+function doPush(){if(busy)return;if(!GAS||!ready){stat('Chưa đăng nhập hoặc chưa tải xong dữ liệu.');return}busy=true;stat('Đang gửi lên Google Sheet…');
+GAS.withSuccessHandler(()=>{busy=false;FORCE=false;dirty=false;mark();ls();$('cf').style.display='none';stat('Đã gửi dữ liệu về Google lúc '+new Date().toLocaleTimeString('vi-VN'))}).withFailureHandler(e=>{busy=false;
+if(e&&e.code=='session'){showLogin('Phiên đăng nhập hết hạn, hãy đăng nhập lại (dữ liệu chưa gửi vẫn được giữ trên máy).');return}
+if(e&&e.code=='conflict'){stat('⚠ Dữ liệu này vừa được sửa ở nơi khác. Bấm “Tải lại từ Google” để lấy bản mới, hoặc “Ghi đè” để dùng bản của bạn.');$('cf').style.display='';return}
+stat('Lỗi gửi: '+em(e)+' – dữ liệu vẫn còn trên màn hình, bấm gửi lại.')}).saveAll(payload())}
+function pull(){stat('Đang tải dữ liệu của bạn…');ready=false;
+GAS.withSuccessHandler(res=>{try{UNAME=res.name||UID;const d=res.data,h=(d[0]||[]).map(nz);
+const ix=COLS.map((c,i)=>{let k=h.indexOf(nz(c[1]));if(k<0)k=h.indexOf(c[0]);return k<0?i:k});
+S.rows=d.slice(1).filter(v=>v.some(x=>String(x).trim())).map(v=>{const r={};COLS.forEach((c,i)=>{const x=String(v[ix[i]]==null?'':v[ix[i]]).trim();r[c[0]]=c[2]=='d'?iso(x):x});return r});
+(res.chung||[]).slice(1).forEach(v=>{const k=String(v[0]||'').trim(),x=v[1]==null?'':String(v[1]);if(GF.some(f=>f[0]==k))S.g[k]=x;else if(['vl','ck1','ck2','t1','t2'].includes(k))S[k]=x;else if(k=='mg'){const a=x.split(',').map(Number);if(a.length==5&&a.every(isFinite))S.m={t:a[0],b:a[1],l:a[2],r:a[3],fit:a[4]}}});
+dirty=false;try{const dr=JSON.parse(localStorage.getItem('hsnt_d_'+UID));if(dr&&dr.dirty&&String(dr.rev)==String(REV)&&confirm('Lần trước bạn có thay đổi chưa gửi về Google. Khôi phục bản nháp đó?')){S=dr.s;dirty=true}}catch(e){}
+VA=1;VB=Math.max(50,VB);am();mi();ui();build();ready=true;mark();$('who').textContent=UNAME+' ('+UID+')';
+stat(dirty?'● Đã khôi phục bản nháp chưa gửi – bấm “Gửi dữ liệu về Google”.':'Đã tải '+S.rows.length+' dòng dữ liệu của bạn lúc '+new Date().toLocaleTimeString('vi-VN'))}catch(e){stat('Lỗi đọc dữ liệu: '+e.message)}})
+.withFailureHandler(e=>{if(e&&e.code=='session')showLogin('Phiên đăng nhập hết hạn, hãy đăng nhập lại.');else stat('Không tải được dữ liệu: '+em(e))}).loadAll()}
+/* đăng nhập */
+function showLogin(msg){ready=false;TK='';try{localStorage.removeItem('hsnt_tk')}catch(e){}$('lg').style.display='block';$('lm').textContent=msg||'';
+$('lu').parentElement.style.display=CFG0.url?'none':'';$('lu').value=CF.url||'';$('li').value=CF.id||'';($('li').value?$('lp'):$('li')).focus()}
+async function doLogin(){const m=$('lm');CF.url=(CFG0.url||$('lu').value).trim();CF.id=$('li').value.trim();
+if(!CF.url||!CF.id||!$('lp').value){m.textContent='Nhập đủ URL, ID và mật khẩu.';return}
+m.textContent='Đang đăng nhập…';try{TK='';const j=await call('login',{id:CF.id,pw:$('lp').value});TK=j.token;UID=j.id;UNAME=j.name;$('lp').value='';
+try{localStorage.setItem('hsnt_cfg',JSON.stringify({url:CF.url,id:CF.id}));localStorage.setItem('hsnt_tk',JSON.stringify({tk:TK,uid:UID,name:UNAME}))}catch(e){}
+$('lg').style.display='none';S.rows=[];GAS=mkG();pull()}catch(e){m.textContent=em(e)}}
+async function logout(){if(dirty&&!confirm('Còn thay đổi chưa gửi về Google (vẫn được giữ trên máy này). Đăng xuất?'))return;try{await call('logout')}catch(e){}S.rows=[];dirty=false;UID='';ui();$('pv').innerHTML='';$('who').textContent='';showLogin('Đã đăng xuất.')}
+/* dải dòng hiển thị */
+function vr(){$('va').value=VA;$('vb').value=VB;$('vt').textContent=S.rows.length}
+function ui(){ui0();vr()}
+const vset=(a,b)=>{VA=Math.max(1,a|0);VB=Math.max(VA,b|0);ui()};
+$('va').onchange=()=>vset(+$('va').value,VB);$('vb').onchange=()=>vset(VA,+$('vb').value);
+$('vp').onclick=()=>{const w=VB-VA+1,a=Math.max(1,VA-w);vset(a,a+w-1)};$('vn').onclick=()=>{const w=VB-VA+1;vset(VA+w,VA+2*w-1)};$('vall').onclick=()=>vset(1,Math.max(S.rows.length,1));
+$('lb').onclick=doLogin;$('lp').addEventListener('keydown',e=>{if(e.key=='Enter')doLogin()});
+$('snd').onclick=doPush;$('lo').onclick=logout;$('cf').onclick=()=>{FORCE=true;doPush()};
+$('rl').onclick=()=>{if(!GAS)return;if(dirty&&!confirm('Các thay đổi chưa gửi sẽ bị thay bằng dữ liệu trên Google. Tiếp tục?'))return;pull()};
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+am();mi();ui();build();
+let T0=null;try{T0=JSON.parse(localStorage.getItem('hsnt_tk'))}catch(e){}
+if(T0&&T0.tk&&CF.url){TK=T0.tk;UID=T0.uid;UNAME=T0.name;GAS=mkG();pull()}else showLogin();
+</script></body></html>
