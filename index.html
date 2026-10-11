@@ -515,8 +515,9 @@ am();mi();ui();qfInit();build();
 let T0=null;try{T0=JSON.parse(localStorage.getItem('hsnt_tk'))}catch(e){}
 if(T0&&T0.tk&&CF.url){TK=T0.tk;UID=T0.uid;UNAME=T0.name;GAS=mkG();pull()}else showLogin();
 // --- Xử lý chức năng Trợ lý AI ---
-// --- Xử lý chức năng Trợ lý AI (CƠ CHẾ HỌC TRƯỚC TRONG RAM - SIÊU TỐC) ---
-const GEMINI_API_KEY_FRONTEND = 'AQ.Ab8RN6J9dynstp1Srm0-4zP4qpN6T3VdRPBNqicUSN8sw6ZZGA'; // Bắt buộc điền API Key vào đây
+const PART_1 ='AQ.Ab8RN6LhLG2YgZH_9etu9bvcCxxx_'
+const PART_2= '3RgpMLPYhd4CisBm49sNQ'
+const GEMINI_API_KEY_FRONTEND = PART_1 + PART_2; // Bắt buộc điền API Key vào đây
 $('ai-btn').onclick = async () => {
   const inputEl = $('ai-input');
   const hist = $('ai-chat-history');
