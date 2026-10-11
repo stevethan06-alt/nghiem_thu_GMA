@@ -558,7 +558,7 @@ $('ai-btn').onclick = async () => {
                  "--- VÁCH KÍNH ---\n" + (vkData.length ? JSON.stringify(vkData) : "Không có") + "\n\n" +
                  "Dựa vào dữ liệu trên, hãy trả lời câu hỏi: " + question + "\n(Trả lời bằng tiếng Việt, phân tích rành mạch, rõ ràng).";
 
-    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent', {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
