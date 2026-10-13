@@ -35,6 +35,7 @@ table.gr{border-collapse:collapse;min-width:2000px}
 .pg table.nb td{border:0;padding:1px 3px}.sig td{border:0;text-align:center;height:90px;vertical-align:top;width:50%}
 .pg p{margin:calc((var(--lh,1.4) - 1)*7px) 0;text-align:justify}.pg p.r{text-align:right}.pg .gap{height:6px}.pg small{font-size:11px}
 @media print{@page{size:A4;margin:0}html,body{width:210mm;margin:0;padding:0;background:#fff}#pv{display:block;margin:0;overflow:visible}.np{display:none!important}.app{width:210mm;max-width:none;margin:0;padding:0}.pg{box-sizing:border-box;display:block;position:relative;float:none;clear:both;width:210mm;height:296mm;min-height:0;margin:0;padding:var(--mt,12mm) var(--mr,12mm) var(--mb,12mm) var(--ml,20mm);overflow:hidden;border:0;page-break-after:auto;break-after:auto;page-break-inside:avoid;break-inside:avoid}.pg+.pg{page-break-before:always;break-before:page}}
+.pg .hf{position:absolute;left:var(--ml,20mm);right:var(--mr,12mm);font-size:10px;line-height:1.2;font-family:"Times New Roman",Times,serif;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pg .hf.hh{top:3mm}.pg .hf.ff{bottom:3mm}
 </style></head><body><div id="lg" class="np"><div class="box"><h1>Đăng nhập</h1><p class="sub">Dữ liệu hồ sơ của bạn được tải về sau khi đăng nhập.</p>
 <div><label>URL Web App (Apps Script)</label><input id="lu" autocomplete="off"></div>
 <div style="margin-top:8px"><label>ID người dùng</label><input id="li" autocomplete="username"></div>
@@ -100,7 +101,11 @@ table.gr{border-collapse:collapse;min-width:2000px}
 <details><summary>3. In ấn: lề giấy và dãn dòng</summary><div class="in"><div class="g">
 <div><label>Lề trên (mm)</label><input type="number" min="0" max="40" step="1" data-m="t"></div><div><label>Lề dưới (mm)</label><input type="number" min="0" max="40" step="1" data-m="b"></div>
 <div><label>Lề trái (mm)</label><input type="number" min="0" max="45" step="1" data-m="l"></div><div><label>Lề phải (mm)</label><input type="number" min="0" max="40" step="1" data-m="r"></div>
-<div><label><input type="checkbox" data-m="fit" style="width:auto"> Tự dãn dòng cho vừa 1 trang A4 (thu nhỏ chữ nếu dài quá)</label></div></div></div></details>
+<div><label><input type="checkbox" data-m="fit" style="width:auto"> Tự dãn dòng cho vừa 1 trang A4 (thu nhỏ chữ nếu dài quá)</label></div></div>
+<div class="g" style="margin-top:10px">
+<div style="grid-column:1/-1"><label>Header – đầu trang (để trống = không in)</label><div style="display:flex;gap:8px"><input data-hf="h" placeholder="VD: GMA.Q1 – Hồ sơ nghiệm thu nhôm kính" style="flex:1"><select data-hf="ha" style="width:110px"><option value="l">Căn trái</option><option value="c">Căn giữa</option><option value="r">Căn phải</option></select></div></div>
+<div style="grid-column:1/-1"><label>Footer – chân trang (để trống = không in)</label><div style="display:flex;gap:8px"><input data-hf="f" placeholder="VD: Trang {trang}/{tong}" style="flex:1"><select data-hf="fa" style="width:110px"><option value="l">Căn trái</option><option value="c">Căn giữa</option><option value="r">Căn phải</option></select></div></div>
+<div style="grid-column:1/-1;font-size:12px;color:#666">Chèn {trang} = số trang hiện tại, {tong} = tổng số trang. Header/footer nằm trong vùng lề trên/dưới nên cần để lề tối thiểu ~10mm.</div></div></div></details>
 <div class="bar">
 <div><button id="add">+ Thêm dòng</button> <button class="s" id="paste">Dán từ Excel</button> <button class="s" id="clr">Xóa hết</button></div>
 </div>
@@ -150,7 +155,7 @@ if(!S)S={g:{},rows:[],ck1:C1,ck2:C2,ck3:C3,ck4:C4,t4:'SẢN XUẤT LẮP DỰNG 
 if(S.ck3==null)S.ck3=C3;if(S.t3==null)S.t3='VÁCH KÍNH PHÒNG TẮM // SHOWER SCREEN INSTALLATION';mig3();if(S.ck4==null)S.ck4=C4;if(S.t4==null)S.t4='SẢN XUẤT LẮP DỰNG LAN CAN // BALUSTRADE INSTALLATION & FABRICATION';
 if(S.t1=='LẮP DỰNG KHUNG CỬA // DOOR/WINDOW FRAME INSTALLATION')S.t1='LẮP DỰNG KHUNG PHỤ // SUBFRAME INSTALLATION';
 if(S.t2=='LẮP ĐẶT CỬA // DOOR/WINDOW INSTALLATION')S.t2='LẮP DỰNG KHUNG CHÍNH // MAINFRAME INSTALLATION';
-S.g=S.g||{};S.m=Object.assign({t:12,b:12,l:20,r:12,fit:1},S.m||{});GF.forEach(f=>{if(S.g[f[0]]==null)S.g[f[0]]=f[2]});
+S.g=S.g||{};S.m=Object.assign({t:12,b:12,l:20,r:12,fit:1},S.m||{});S.hf=Object.assign({h:'',f:'',ha:'c',fa:'c'},S.hf||{});GF.forEach(f=>{if(S.g[f[0]]==null)S.g[f[0]]=f[2]});
 const $=i=>document.getElementById(i),ls=()=>{try{if(UID)localStorage.setItem('hsnt_d_'+UID,JSON.stringify({s:S,rev:REV,dirty:dirty}))}catch(e){}},sv=()=>{push();ls();ap()};
 const nr=()=>{const r={};COLS.forEach(c=>r[c[0]]=c[2]=='d'?'':c[2]);return r};
 const HID=['thap','tang','loai','ct','can','evid','posted'],GRID=()=>COLS.filter(c=>HID.indexOf(c[0])<0);
@@ -187,7 +192,7 @@ function ycnt(r,i){return `<div class="pg">${hd(r.gui)}<h2>PHIẾU YÊU CẦU NG
 <p style="text-align: center;"><b>Số/No:</b> ${esc(mh(r,i))}</p>${info()}
 <p>Sau khi đã kiểm tra và tự nghiệm thu nội bộ công việc xây dựng, nội dung thể hiện trong biên bản nghiệm thu nội bộ số: ${esc(mn(r))}, ngày ${F(r.nd)}, Nhà thầu đề nghị Tư vấn giám sát nghiệm thu công việc sau:</p>
 <p><i>After the examination and internal inspection, the content shown in the internal inspection record No: ${esc(mn(r))}, date ${F(r.nd)}, the Contractor requests the Supervisor to inspect the following work:</i></p>
-<table style="margin:8px 0"><tr><th style="width:45%">Nội dung công tác nghiệm thu / Work Descriptions</th><th>Địa điểm / Location</th><th>Thời gian / Time</th></tr><tr><td>${esc(nd(r))}</td><td>${esc(r.vt)}</td><td>${esc(r.ts)} ngày ${F(r.td)}</td></tr></table>
+<table style="margin:8px 0"><tr><th style="width:45%">Nội dung công tác nghiệm thu / Work Descriptions</th><th>Địa điểm / Location</th><th>Thời gian / Time</th></tr><tr><td>${esc(nd(r))}</td><td style="text-align:center">${esc(r.vt)}</td><td style="text-align:center">${esc(r.ts)}</td></tr></table>
 <p>- Thời gian tổ chức nghiệm thu/Time of inspection: Ngày/day ${P(r.td)[2]} tháng/month ${P(r.td)[1]} Năm/year ${P(r.td)[0]}</p><div class="gap"></div>
 ${sig('ĐẠI DIỆN TƯ VẤN GIÁM SÁT<br>Supervisor Consultant’s Rep','ĐẠI DIỆN NHÀ THẦU THI CÔNG<br>Contractor’s Rep','Full name: '+tg(r)+'\nPosition: '+G().tgc,ctN())}</div>`}
 const base=r=>`<p><b>Gói thầu/Package:</b> ${esc(G().goi)}</p><p><b>Địa điểm/Location:</b> ${esc(G().dd)}</p><p><b>Hạng mục/Item:</b> ${esc(G().goi)}</p><p><b>1. Đối tượng nghiệm thu/Acceptance work item:</b> ${esc(nd(r))}</p>`;
@@ -246,10 +251,15 @@ let ix=sel();if(!full&&blank)ix=[Math.min(cur,S.rows.length-1)];
 if(!ix.length){st.textContent='Không có STT phù hợp.';$('pv').innerHTML='';return 0}
 let h=[];if($('ord').value=='r')ix.forEach(i=>ty.forEach(t=>h.push(FN[t](S.rows[i],i))));else ty.forEach(t=>ix.forEach(i=>h.push(FN[t](S.rows[i],i))));
 const tot=h.length;if(!full&&tot>12)h=h.slice(0,12);
-$('pv').innerHTML=h.join('');if(!full)fit();
+$('pv').innerHTML=h.join('');ahf();if(!full)fit();
 st.textContent=`Xem trước STT ${ix.length>6?ix[0]+1+'…'+(ix[ix.length-1]+1):ix.map(i=>i+1).join(', ')} · ${h.length}/${tot} trang`+(!full&&blank?' (đang theo dòng bạn nhập; để trống ô số thứ tự thì xuất PDF in tất cả)':'');return h.length}
+function ahf(){const L=[...document.querySelectorAll('#pv .pg')],n=L.length,H=S.hf||{};const al={l:'left',c:'center',r:'right'};
+const mk=(t,c,a,i)=>{if(!String(t||'').trim())return'';return`<div class="hf ${c}" style="text-align:${al[a]||'center'}">${esc(String(t).replace(/\{trang\}/gi,i+1).replace(/\{tong\}/gi,n))}</div>`};
+L.forEach((p,i)=>{p.querySelectorAll('.hf').forEach(x=>x.remove());p.insertAdjacentHTML('afterbegin',mk(H.h,'hh',H.ha,i)+mk(H.f,'ff',H.fa,i))})}
+function hfi(){document.querySelectorAll('[data-hf]').forEach(i=>{i.value=S.hf[i.dataset.hf]||''})}
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.hf;if(!k)return;S.hf[k]=e.target.value;ahf();sv()});
 function am(){const p=$('pv').style,m=S.m;p.setProperty('--mt',m.t+'mm');p.setProperty('--mb',m.b+'mm');p.setProperty('--ml',m.l+'mm');p.setProperty('--mr',m.r+'mm')}
-function mi(){document.querySelectorAll('[data-m]').forEach(i=>{const v=S.m[i.dataset.m];if(i.type=='checkbox')i.checked=!!v;else i.value=v})}
+function mi(){hfi();document.querySelectorAll('[data-m]').forEach(i=>{const v=S.m[i.dataset.m];if(i.type=='checkbox')i.checked=!!v;else i.value=v})}
 document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.m;if(!k)return;S.m[k]=e.target.type=='checkbox'?(e.target.checked?1:0):(+e.target.value||0);am();sv()});
 function fp(pg){let fs=12.5;const st=(a,b)=>{pg.style.setProperty('--fs',a+'px');pg.style.setProperty('--lh',b)};
 const fits=()=>pg.lastElementChild.getBoundingClientRect().bottom<=pg.getBoundingClientRect().bottom-parseFloat(getComputedStyle(pg).paddingBottom)+0.5;
@@ -265,7 +275,7 @@ $('pdf').onclick=()=>{if(build(true))fit().then(()=>setTimeout(()=>window.print(
 window.addEventListener('afterprint',()=>build());
 /* đồng bộ Google Sheet – đăng nhập theo người dùng, gửi thủ công */
 function mark(){$('snd').textContent=(dirty?'● ':'')+'Gửi dữ liệu về Google'}
-function payload(){return{chi_tiet:buildCT(),data:[COLS.map(c=>c[1])].concat(S.rows.map(r=>COLS.map(c=>c[2]=='d'?F2(r[c[0]]):(r[c[0]]||'')))),chung:[['Khóa','Giá trị']].concat(GF.map(f=>[f[0],S.g[f[0]]||''])).concat(Object.keys(CAT0).map(k=>['cat_'+k,cat()[k]])).concat([['vl',S.vl],['ck1',S.ck1],['ck2',S.ck2],['ck3',S.ck3],['ck4',S.ck4],['t1',S.t1],['t2',S.t2],['t3',S.t3],['t4',S.t4],['mg',[S.m.t,S.m.b,S.m.l,S.m.r,S.m.fit].join(',')]])}}
+function payload(){return{chi_tiet:buildCT(),data:[COLS.map(c=>c[1])].concat(S.rows.map(r=>COLS.map(c=>c[2]=='d'?F2(r[c[0]]):(r[c[0]]||'')))),chung:[['Khóa','Giá trị']].concat(GF.map(f=>[f[0],S.g[f[0]]||''])).concat(Object.keys(CAT0).map(k=>['cat_'+k,cat()[k]])).concat([['vl',S.vl],['ck1',S.ck1],['ck2',S.ck2],['ck3',S.ck3],['ck4',S.ck4],['t1',S.t1],['t2',S.t2],['t3',S.t3],['t4',S.t4],['mg',[S.m.t,S.m.b,S.m.l,S.m.r,S.m.fit].join(',')],['hf',JSON.stringify(S.hf)]])}}
 function push(){if(!GAS||!ready)return;dirty=true;mark();stat('● Có thay đổi chưa gửi lên Google – bấm “Gửi dữ liệu về Google”.')}
 function doPush(){if(busy)return;if(!GAS||!ready){stat('Chưa đăng nhập hoặc chưa tải xong dữ liệu.');return}busy=true;stat('Đang ghi lũy kế và gửi lên Google Sheet…');
 const evs=evList(),rows=S.rows.filter(r=>r.ct&&r.thap&&r.loai&&r.posted!='1');let lkNote='';
@@ -288,7 +298,7 @@ function pull(){stat('Đang tải dữ liệu của bạn…');ready=false;
 GAS.withSuccessHandler(res=>{try{UNAME=res.name||UID;const d=res.data,h=(d[0]||[]).map(nz);
 const ix=COLS.map((c,i)=>{let k=h.indexOf(nz(c[1]));if(k<0)k=h.indexOf(c[0]);return k<0?i:k});
 S.rows=d.slice(1).filter(v=>v.some(x=>String(x).trim())).map(v=>{const r={};COLS.forEach((c,i)=>{const x=String(v[ix[i]]==null?'':v[ix[i]]).trim();r[c[0]]=c[2]=='d'?iso(x):x});return r});
-(res.chung||[]).slice(1).forEach(v=>{const k=String(v[0]||'').trim(),x=v[1]==null?'':String(v[1]);if(GF.some(f=>f[0]==k))S.g[k]=x;else if(['vl','ck1','ck2','ck3','ck4','t1','t2','t3','t4'].includes(k))S[k]=x;else if(k.indexOf('cat_')==0&&(k.slice(4) in CAT0)){cat();S.cat[k.slice(4)]=x}else if(k=='mg'){const a=x.split(',').map(Number);if(a.length==5&&a.every(isFinite))S.m={t:a[0],b:a[1],l:a[2],r:a[3],fit:a[4]}}});
+(res.chung||[]).slice(1).forEach(v=>{const k=String(v[0]||'').trim(),x=v[1]==null?'':String(v[1]);if(GF.some(f=>f[0]==k))S.g[k]=x;else if(['vl','ck1','ck2','ck3','ck4','t1','t2','t3','t4'].includes(k))S[k]=x;else if(k.indexOf('cat_')==0&&(k.slice(4) in CAT0)){cat();S.cat[k.slice(4)]=x}else if(k=='hf'){try{const o=JSON.parse(x);if(o&&typeof o=='object')S.hf=Object.assign({h:'',f:'',ha:'c',fa:'c'},o)}catch(_){}}else if(k=='mg'){const a=x.split(',').map(Number);if(a.length==5&&a.every(isFinite))S.m={t:a[0],b:a[1],l:a[2],r:a[3],fit:a[4]}}});
 dirty=false;try{const dr=JSON.parse(localStorage.getItem('hsnt_d_'+UID));if(dr&&dr.dirty&&String(dr.rev)==String(REV)&&confirm('Lần trước bạn có thay đổi chưa gửi về Google. Khôi phục bản nháp đó?')){S=dr.s;dirty=true}}catch(e){}
 if(S.ck3==null)S.ck3=C3;if(S.t3==null)S.t3='VÁCH KÍNH PHÒNG TẮM // SHOWER SCREEN INSTALLATION';mig3();if(S.ck4==null)S.ck4=C4;if(S.t4==null)S.t4='SẢN XUẤT LẮP DỰNG LAN CAN // BALUSTRADE INSTALLATION & FABRICATION';
 if(S.t1=='LẮP DỰNG KHUNG CỬA // DOOR/WINDOW FRAME INSTALLATION')S.t1='LẮP DỰNG KHUNG PHỤ // SUBFRAME INSTALLATION';
