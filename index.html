@@ -208,10 +208,21 @@ document.addEventListener('input',e=>{const t=e.target;
 if(t.dataset.g)S.g[t.dataset.g]=t.value;else if(t.dataset.r!=null)S.rows[t.dataset.r][t.dataset.k]=t.value;
 else if(t.id=='vl')S.vl=t.value;else if(t.id=='ck1')S.ck1=t.value;else if(t.id=='ck2')S.ck2=t.value;else if(t.id=='ck3')S.ck3=t.value;else if(t.id=='ck4')S.ck4=t.value;else if(t.id=='ckt1')S.t1=t.value;else if(t.id=='ckt2')S.t2=t.value;else if(t.id=='ckt3')S.t3=t.value;else if(t.id=='ckt4')S.t4=t.value;sv()});
 document.addEventListener('click',e=>{const t=e.target;
-if(t.dataset.del!=null){S.rows.splice(t.dataset.del,1);sv();ui()}
-if(t.dataset.dup!=null){S.rows.splice(+t.dataset.dup+1,0,{...S.rows[t.dataset.dup]});sv();ui()}});
-$('add').onclick=()=>{const l=S.rows[S.rows.length-1];S.rows.push(l?{...l,so:''}:nr());if(S.rows.length>VB){const w=VB-VA;VB=S.rows.length;VA=Math.max(1,VB-w)}sv();ui()};
-$('clr').onclick=()=>{if(confirm('Xóa toàn bộ dòng dữ liệu?')){S.rows=[];sv();ui()}};
+if(t.dataset.del!=null){
+  if(!confirm('Xóa dòng biên bản này trên cả giao diện và Google Sheet?'))return;
+  S.rows.splice(+t.dataset.del,1);
+  LKC && Object.keys(LKC).forEach(k=>delete LKC[k]);
+  sv();ui();qfItems();doPush();
+  setTimeout(()=>{lkRefresh();lkXLoad();qfLK()},1500);
+}
+if(t.dataset.dup!=null){S.rows.splice(+t.dataset.dup+1,0,{...S.rows[t.dataset.dup],evid:newEv(),posted:''});sv();ui()}});
+$('add').onclick=()=>{const l=S.rows[S.rows.length-1];S.rows.push(l?{...l,so:'',evid:newEv(),posted:''}:nr());if(S.rows.length>VB){const w=VB-VA;VB=S.rows.length;VA=Math.max(1,VB-w)}sv();ui()};
+$('clr').onclick=()=>{if(confirm('Xóa toàn bộ dòng dữ liệu trên cả giao diện và Google Sheet?')){
+  S.rows=[];
+  LKC && Object.keys(LKC).forEach(k=>delete LKC[k]);
+  sv();ui();qfItems();doPush();
+  setTimeout(()=>{lkRefresh();lkXLoad();qfLK()},1500);
+}};
 $('paste').onclick=()=>{const t=prompt('Dán các dòng copy từ Excel (đúng thứ tự cột như bảng, ngày dạng dd/mm/yyyy):');if(!t)return;
 t.split(/\r?\n/).filter(x=>x.trim()).forEach(l=>{const v=l.split('\t'),r=nr();COLS.forEach((c,i)=>{let x=(v[i]||'').trim();if(c[2]=='d'){const m=x.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);x=m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:''}r[c[0]]=x||r[c[0]]});S.rows.push(r)});sv();ui()};
 /* ---- sinh biên bản ---- */
@@ -886,35 +897,43 @@ function sendAll(){doPush()}
 $('qs').onclick=()=>{qfAdd();if(qfOK)doPush()};$('snd').onclick=sendAll;
 let qfRevN=10;
 function qfRevRender(){const idx=[];S.rows.forEach((r,i)=>{if(r.ct&&r.thap)idx.push(i)});
-$('qvw').innerHTML='<label>Biên bản đã nhập ('+idx.length+') — bấm “Xem / Sửa” để xem chi tiết và chỉnh nếu sai</label>'+(idx.length?idx.slice(0,qfRevN).map(i=>{const r=S.rows[i];return `<div class="qr"><div style="flex:1;min-width:200px"><b>STT ${i+1}</b> · ${esc(r.vt)} · ${esc(r.hm)} · ${esc(r.loai)}<br><small>${esc(qfDisplayCt(r))} · Ngày NT ${esc(F2(r.td))} · ${r.posted=='1'?'✔ đã ghi lũy kế':'chưa gửi'}</small></div><button class="s" data-rvb="${i}">Xem / Sửa</button><div class="rvd" style="flex-basis:100%" hidden></div></div>`}).join('')+(idx.length>qfRevN?'<button class="s" id="qmore">Hiện thêm</button>':''):'<div><small>Chưa có biên bản nào.</small></div>')}
-function qfRevOpen(i,card){const r=S.rows[i],box=card.querySelector('.rvd'),ps=qfGroupedQty(r.ct,r.hm),notes=qfNotes(r),sc=[r.thap,r.tang,r.hm,r.loai].join('|');
+$('qvw').innerHTML='<label>Biên bản đã nhập ('+idx.length+') — bấm “Xem / Sửa” để xem chi tiết hoặc “Xóa” để xóa khỏi Google Sheet</label>'+(idx.length?idx.slice(0,qfRevN).map(i=>{const r=S.rows[i];return `<div class="qr"><div style="flex:1;min-width:200px"><b>STT ${i+1}</b> · ${esc(r.vt)} · ${esc(r.hm)} · ${esc(r.loai)}<br><small>${esc(qfDisplayCt(r))} · Ngày NT ${esc(F2(r.td))} · ${r.posted=='1'?'✔ đã ghi lũy kế':'chưa gửi'}</small></div><button class="s" data-rvb="${i}">Xem / Sửa</button> <button class="s" data-rdel="${i}" style="color:#c0392b;border-color:#c0392b">Xóa</button><div class="rvd" style="flex-basis:100%" hidden></div></div>`}).join('')+(idx.length>qfRevN?'<button class="s" id="qmore">Hiện thêm</button>':''):'<div><small>Chưa có biên bản nào.</small></div>')}
+
+function qfRevOpen(i,card){const r=S.rows[i],box=card.querySelector('.rvd'),ps=qfGroupedQty(r.ct,r.hm),notes=qfNotes(r);
 if(!box.hidden){box.hidden=true;return}
 box.innerHTML='<div class="g" style="margin:6px 0">'+[['ten','Tên công việc']].concat(QF).map(f=>`<div><label>${f[1]}</label>${f[0]=='ck'?ckSelect(r.ck,'data-ri="ck"'):`<input ${f[2]?'type="date"':''} data-ri="${f[0]}" value="${esc(r[f[0]]||'')}">`}</div>`).join('')+'</div><label>Chi tiết đối tượng trong biên bản tầng này — sửa số lượng nghiệm thu đợt này</label>'
 +ps.map((x,k)=>{const meta=qfItemMeta(x.n),floor=meta.floor||r.tang;return `<div class="qr"><label><span>${esc(x.n.replace(' :: ',': '))}<small data-rl="${k}">Tổng ${x.t===''?'—':x.t}</small></span></label><div class="qc"><i>Nghiệm thu đợt này</i><input type="number" inputmode="numeric" data-rq="${k}" value="${x.q}"></div><div class="qc"><i>Ghi chú</i><input type="text" data-rnote="${k}" value="${esc(notes[qfNoteKey(r.thap,floor,'',meta.name)]||'')}"></div>${x.t!==''?'<span>/ '+x.t+'</span>':''}</div>`}).join('')
 +'<div class="bar" style="margin:8px 0 0"><button data-rsave="'+i+'">Lưu chỉnh sửa</button><button class="s" data-rclose="'+i+'">Đóng</button></div>';
 box.hidden=false;
 if(r.posted=='1'&&ready&&TK){const fs=[...new Set(ps.map(x=>qfItemMeta(x.n).floor||r.tang))];Promise.all(fs.map(f=>call('luyke',{thap:r.thap,tang:f,hm:r.hm,loai:r.loai}).then(j=>{LKC[[r.thap,f,r.hm,r.loai].join('|')]=r.hm===HM_VK?qfNormalizeLk(j.lk):j.lk||{}}))).then(()=>{ps.forEach((x,k)=>{const meta=qfItemMeta(x.n),el=box.querySelector('[data-rl="'+k+'"]');if(el)el.textContent='Lũy kế hiện tại '+(lkCurrent(r.thap,meta.floor||r.tang,'',r.hm,r.loai,meta.name)||0)+(x.t!==''?'/'+x.t:'')})},e=>qfMsg('Không tải được lũy kế biên bản ('+em(e)+').'))}}
+
 async function qfRevSave(i,box){if(busy){qfMsg('Đang gửi dữ liệu, thử lại sau giây lát.');return}
-const r=S.rows[i],ps=qfGroupedQty(r.ct,r.hm),sc=[r.thap,r.tang,r.hm,r.loai].join('|'),ev=[],posted=r.posted=='1',
+const r=S.rows[i],ps=qfGroupedQty(r.ct,r.hm),
 nq=ps.map((x,k)=>{const v=box.querySelector('[data-rq="'+k+'"]').value;return v===''?x.q:+v});let err='';
-const iv=k=>box.querySelector('[data-ri="'+k+'"]').value;
-ps.forEach((x,k)=>{const d=nq[k]-x.q;if(!d||!posted)return;
+ps.forEach((x,k)=>{const d=nq[k]-x.q;if(!d)return;
 const meta=qfItemMeta(x.n),cum=lkCurrent(r.thap,meta.floor||r.tang,'',r.hm,r.loai,meta.name);
-if(cum!=null){const n=cum+d;if(n<0)err='"'+x.n+'": lũy kế hiện tại '+cum+', không thể giảm '+(-d)+'.';else if(x.t!==''&&n>x.t)err='"'+x.n+'": lũy kế sẽ thành '+n+' vượt tổng '+x.t+'.'}
-ev.push({id:(r.evid||'x')+'#'+k+'~'+Date.now().toString(36),thap:r.thap,tang:meta.floor||r.tang||'',can:'',hm:r.hm||'',loai:r.loai,ten:meta.name,sl:d,tong:x.t,ma:iv('ma'),vt:r.vt||'',ngnt:F2(iv('td')),note:box.querySelector('[data-rnote="'+k+'"]').value.trim()||'Điều chỉnh biên bản STT '+(i+1)})});
+if(cum!=null){const n=cum+d;if(n<0)err='"'+x.n+'": lũy kế hiện tại '+cum+', không thể giảm '+(-d)+'.';else if(x.t!==''&&n>x.t)err='"'+x.n+'": lũy kế sẽ thành '+n+' vượt tổng '+x.t+'.'}});
 if(err){qfMsg(err);return}
-const apply=()=>{box.querySelectorAll('[data-ri]').forEach(el=>{r[el.dataset.ri]=el.value});
+box.querySelectorAll('[data-ri]').forEach(el=>{r[el.dataset.ri]=el.value});
 const updatedNotes={};ps.forEach((x,k)=>{const meta=qfItemMeta(x.n),note=box.querySelector('[data-rnote="'+k+'"]').value.trim();if(note)updatedNotes[qfNoteKey(r.thap,meta.floor||r.tang,'',meta.name)]=note});
-r.ct=ps.map((x,k)=>nq[k]?x.n+' '+nq[k]+(x.t!==''?'/'+x.t:''):'').filter(Boolean).join('; ');r.ghichu=JSON.stringify(updatedNotes);sv();ui();qfRevRender();doPush()};
-if(!ev.length){apply();return}
-if(!GAS||!ready){qfMsg('Chưa đăng nhập hoặc chưa tải xong dữ liệu.');return}
-busy=true;qfMsg('Đang ghi điều chỉnh lũy kế…');
-try{const j=await call('luyke_post',{events:ev});busy=false;lkApplyEventResults(ev,j.lk||{});lkScheduleRefresh();lkXLoad();apply()}
-catch(e){busy=false;if(e&&e.code=='session'){showLogin('Phiên đăng nhập hết hạn, hãy đăng nhập lại.');return}qfMsg('Không ghi được điều chỉnh lũy kế ('+em(e)+') — chưa lưu chỉnh sửa.')}}
- $('qrv').addEventListener('click',()=>{const v=$('qvw');if(v.hidden){$('qf').open=true;v.hidden=false;qfRevRender();v.scrollIntoView({behavior:'smooth',block:'nearest'})}else v.hidden=true});
-$('qf').addEventListener('click',e=>{const t=e.target;
+r.ct=ps.map((x,k)=>nq[k]>=0?x.n+' '+nq[k]+(x.t!==''?'/'+x.t:''):'').filter(Boolean).join('; ');
+r.ghichu=JSON.stringify(updatedNotes);
+LKC && Object.keys(LKC).forEach(k=>delete LKC[k]);
+sv();ui();qfRevRender();doPush();
+setTimeout(()=>{lkRefresh();lkXLoad();qfLK()},1500);
+}
+
+$('qrv').addEventListener('click',()=>{const v=$('qvw');if(v.hidden){$('qf').open=true;v.hidden=false;qfRevRender();v.scrollIntoView({behavior:'smooth',block:'nearest'})}else v.hidden=true});$('qf').addEventListener('click',e=>{const t=e.target;
 if(t.id=='qmore'){qfRevN+=10;qfRevRender();return}
 if(t.dataset.rvb!=null){qfRevOpen(+t.dataset.rvb,t.closest('.qr'));return}
+if(t.dataset.rdel!=null){
+  if(!confirm('Xóa biên bản này và trừ lại lũy kế trên Google Sheet?'))return;
+  S.rows.splice(+t.dataset.rdel,1);
+  LKC && Object.keys(LKC).forEach(k=>delete LKC[k]);
+  sv();ui();qfRevRender();qfItems();doPush();
+  setTimeout(()=>{lkRefresh();lkXLoad();qfLK()},1500);
+  return;
+}
 if(t.dataset.rclose!=null){t.closest('.rvd').hidden=true;return}
 if(t.dataset.rsave!=null)qfRevSave(+t.dataset.rsave,t.closest('.rvd'))});
 function evList(){const ev=[];S.rows.forEach(r=>{if(!r.ct||!r.thap||!r.loai||r.posted=='1')return;if(!r.evid)r.evid=newEv();const notes=qfNotes(r);
