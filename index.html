@@ -75,6 +75,7 @@ table.gr{border-collapse:collapse;min-width:2000px}
 .photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:2mm;margin-top:2mm;flex:1 1 auto;min-height:118mm}
 .photo-item{min-width:0;min-height:0;margin:0;border:1px solid #596574;border-radius:1mm;display:flex;flex-direction:column;align-items:stretch;overflow:hidden;background:#fff;break-inside:avoid}
 .photo-item img{display:block;width:100%;height:0;object-fit:contain;object-position:center;flex:1 1 auto;min-height:0;background:#fff}
+.photo-placeholder{display:flex;flex:1;align-items:center;justify-content:center;color:#75808b;font-size:9pt;font-weight:700;letter-spacing:.4pt}
 .photo-item figcaption{flex:0 0 7mm;border-top:1px solid #aab4c0;background:#f1f4f7;text-align:center;padding:1.4mm 1mm;font-size:7.5pt;font-weight:700;letter-spacing:.15pt}
 .photo-result{border:1px solid #333;border-top:0;padding:1mm 1.5mm;font-size:8pt}
 .photo-comments{border:1px solid #333;border-top:0;min-height:12mm;padding:1.2mm 1.5mm}
@@ -210,7 +211,7 @@ table.gr{border-collapse:collapse;min-width:2000px}
 <div class="tw"><table class="gr"><thead id="th"></thead><tbody id="tb"></tbody></table></div>
 <details open id="photo-entry"><summary>4. Hình ảnh nghiệm thu (chọn biên bản, nhập đủ Ảnh 1–4)</summary><div class="in">
 <div><label for="photo-row">Biên bản cần chèn ảnh</label><select id="photo-row"></select></div>
-<p style="color:var(--mu);font-size:12px;margin:6px 0">Nhập đủ 4 ảnh. Ảnh được nén và lưu trên trình duyệt/thiết bị này; không tải ảnh lên Google Sheet.</p>
+<p style="color:var(--mu);font-size:12px;margin:6px 0">Mỗi biên bản có bộ 4 ảnh riêng. Chọn biên bản khác để nhập ảnh của biên bản đó; ảnh đã nhập vẫn được giữ. Bấm “In biên bản đang chọn kèm ảnh” để in đúng biên bản này. Ảnh lưu trên trình duyệt/thiết bị này, không tải lên Google Sheet.</p>
 <div class="photo-files">
 <div class="photo-upload"><label for="photo-image-1">Ảnh 1 <span aria-hidden="true">*</span></label><input id="photo-image-1" type="file" accept="image/*" data-photo-image="0" required><button class="s" type="button" data-photo-clear="0">Xóa ảnh</button><img class="photo-thumb" data-photo-preview="0" alt="Xem trước ảnh 1" hidden></div>
 <div class="photo-upload"><label for="photo-image-2">Ảnh 2 <span aria-hidden="true">*</span></label><input id="photo-image-2" type="file" accept="image/*" data-photo-image="1" required><button class="s" type="button" data-photo-clear="1">Xóa ảnh</button><img class="photo-thumb" data-photo-preview="1" alt="Xem trước ảnh 2" hidden></div>
@@ -220,6 +221,7 @@ table.gr{border-collapse:collapse;min-width:2000px}
 <div class="g"><div><label for="photo-attachment">Đính kèm</label><input id="photo-attachment" data-photo-field="attachment"></div>
 <div><label for="photo-distribution">Phân phối</label><input id="photo-distribution" data-photo-field="distribution"></div>
 <div style="grid-column:1/-1"><label for="photo-comment">Ý kiến</label><textarea id="photo-comment" rows="3" data-photo-field="comment"></textarea></div></div>
+<div class="bar"><button type="button" id="photo-print-current">In biên bản đang chọn kèm ảnh</button></div>
 <div id="photo-status" role="status" aria-live="polite"></div></div></details>
 <div class="bar">
 <div><label>Chọn số thứ tự (vd: 1-100 hoặc 1,3,5-8; để trống = tất cả)</label><input id="rng" placeholder="1-100"></div>
@@ -274,6 +276,7 @@ const $=i=>document.getElementById(i),ls=()=>{try{if(UID)localStorage.setItem('h
 const nr=()=>{const r={};COLS.forEach(c=>r[c[0]]=c[2]=='d'?'':c[2]);return r};
 const HID=['thap','tang','loai','ct','can','evid','posted','ghichu'],GRID=()=>COLS.filter(c=>HID.indexOf(c[0])<0);
 const RECORD_CLASSES=['Khung chính','Khung phụ','Lan can','Vách kính'];
+let nextRecordNumbers={};
 const TABLE_FILTERS={},QF_TABLE_FILTERS={};
 let selectedRecordClass='';
 let tableSort={key:'',direction:1};
@@ -286,6 +289,14 @@ if(text.includes('vach kinh'))return'Vách kính';
 if(text.includes('khung phu')||text.includes('grouting khung phu')||text.includes('subframe'))return'Khung phụ';
 if(text.includes('khung chinh')||text.includes('mainframe'))return'Khung chính';
 return'Khác'}
+function nextRecordNumberForClass(category){
+let max=null,hasRows=false;
+S.rows.forEach((row,index)=>{
+if(recordClass(row)!==category)return;
+hasRows=true;
+const value=String(row.so||'').trim(),number=value?(/^\d+$/.test(value)?Number(value):NaN):index+1;
+if(Number.isSafeInteger(number)&&number>=0)max=max===null?number:Math.max(max,number)});
+return hasRows?(max===null?undefined:max+1):nextRecordNumbers[category]}
 function tableColumnValue(row,index,key){
 if(key==='__class')return recordClass(row);
 if(key==='__stt')return String(index+1);
@@ -307,8 +318,12 @@ if(tableSort.key)rows.sort((a,b)=>tableColumnValue(a.row,a.index,tableSort.key).
 return rows}
 function renderRecordClasses(){
 const container=$('record-class-buttons');if(!container)return;
-container.innerHTML=RECORD_CLASSES.map(category=>`<button type="button" class="s class-number-button${selectedRecordClass===category?' active':''}" data-class-filter="${esc(category)}">${esc(category)} · BB tiếp theo: Chưa có dữ liệu tổng hợp</button>`).join('')+
+container.innerHTML=RECORD_CLASSES.map(category=>{const next=nextRecordNumberForClass(category);return `<button type="button" class="s class-number-button${selectedRecordClass===category?' active':''}" data-class-filter="${esc(category)}">${esc(category)} · BB tiếp theo: ${Number.isInteger(next)?next:'Chưa có dữ liệu tổng hợp'}</button>`}).join('')+
 (selectedRecordClass?'<button type="button" class="s" data-class-filter="">Bỏ lọc hạng mục</button>':'')}
+function applyNextRecordNumbers(numbers){
+if(!numbers||typeof numbers!=='object')return;
+nextRecordNumbers=Object.assign({},nextRecordNumbers,numbers);
+renderRecordClasses()}
 function filterColumnValues(key){
 const values=new Set();
 S.rows.forEach((row,index)=>values.add(tableColumnValue(row,index,key)));
@@ -366,6 +381,10 @@ row.photoReport.images=[0,1,2,3].map(index=>String(row.photoReport.images[index]
 ['attachment','comment','distribution'].forEach(key=>{if(typeof row.photoReport[key]!=='string')row.photoReport[key]=''});
 if(row._photoKey&&photoStore[row._photoKey]&&!row.photoReport.images.some(Boolean)&&!row.photoReport.comment&&!row.photoReport.attachment&&!row.photoReport.distribution)row.photoReport=Object.assign(row.photoReport,photoStore[row._photoKey]);
 return row.photoReport}
+function clonePhotoReport(report,empty){
+if(empty)return{images:['','','',''],attachment:'',comment:'',distribution:''};
+return{images:[0,1,2,3].map(index=>String(report&&report.images&&report.images[index]||'')),
+attachment:String(report&&report.attachment||''),comment:String(report&&report.comment||''),distribution:String(report&&report.distribution||'')}}
 function savePhotoReport(row){
 const status=$('photo-status');
 photoStore[row._photoKey]=photoReportFor(row);
@@ -375,15 +394,15 @@ function photoEditorRender(){
 const select=$('photo-row');if(!select)return;
 ensurePhotoKeys();loadPhotoStore();
 S.rows.forEach(row=>photoReportFor(row));
-select.innerHTML=S.rows.map((row,index)=>`<option value="${index}">STT ${index+1} · ${esc(row.ma||row.ten||'Biên bản')} · ${esc(row.hm||'')}</option>`).join('');
+select.innerHTML=S.rows.map((row,index)=>`<option value="${index}">STT ${index+1} · ${esc(row.ma||row.ten||'Biên bản')} · ${esc(row.hm||'')} · ${esc(row.vt||'')}</option>`).join('');
 if(!S.rows.length){select.innerHTML='<option value="">Chưa có biên bản</option>';select.disabled=true;document.querySelectorAll('[data-photo-image],[data-photo-field],[data-photo-clear]').forEach(input=>input.disabled=true);$('photo-status').textContent='Thêm hoặc tải biên bản trước khi nhập ảnh.';return}
 select.disabled=false;
 document.querySelectorAll('[data-photo-image],[data-photo-field],[data-photo-clear]').forEach(input=>input.disabled=false);
 const index=Math.max(0,Math.min(Number(cur)||0,S.rows.length-1));cur=index;select.value=String(index);
-const report=photoReportFor(S.rows[index]);
+const report=photoReportFor(S.rows[index]),savedImages=report.images.filter(Boolean).length;
 document.querySelectorAll('[data-photo-image]').forEach(input=>{input.value='';const number=Number(input.dataset.photoImage),preview=document.querySelector(`[data-photo-preview="${number}"]`),image=report.images[number];preview.hidden=!image;if(image)preview.src=image});
 document.querySelectorAll('[data-photo-field]').forEach(input=>{input.value=report[input.dataset.photoField]||''});
-$('photo-status').textContent=photoStoreError||'Ảnh được lưu cục bộ trên trình duyệt này, không tải lên Google Sheet.'}
+$('photo-status').textContent=photoStoreError||`STT ${index+1}: đã lưu ${savedImages}/4 ảnh cho biên bản này trên thiết bị hiện tại.`}
 async function compressPhoto(file){
 if(!file.type.startsWith('image/'))throw new Error('Tệp đã chọn không phải ảnh.');
 if(file.size>25*1024*1024)throw new Error('Ảnh gốc vượt quá 25 MB.');
@@ -402,11 +421,19 @@ if(quality>.5)quality-=.08;else scale*=.82
 if(!blob||blob.size>150*1024)throw new Error('Không thể nén ảnh xuống dưới 150 KB. Chọn ảnh khác.');
 return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('Không đọc được ảnh đã chọn.'));reader.readAsDataURL(blob)})
 }finally{bitmap.close()}}
-document.getElementById('photo-row').addEventListener('change',event=>{cur=Number(event.target.value)||0;photoEditorRender();ap()});
+document.getElementById('photo-row').addEventListener('change',event=>{cur=Number(event.target.value)||0;document.querySelector('.ty[value="p"]').checked=true;photoEditorRender();ap()});
+document.getElementById('photo-print-current').addEventListener('click',()=>{
+if(!S.rows.length)return;
+const index=Math.max(0,Math.min(Number($('photo-row').value)||0,S.rows.length-1));
+cur=index;
+document.querySelector('.ty[value="p"]').checked=true;
+$('rng').value=String(index+1);
+if(build(true))fit().then(()=>setTimeout(()=>window.print(),150))
+});
 document.getElementById('photo-entry').addEventListener('change',async event=>{
 const input=event.target;if(!input.matches('[data-photo-image]'))return;
 const file=input.files&&input.files[0];if(!file)return;
-try{const row=S.rows[cur];if(!row)throw new Error('Chưa chọn biên bản.');const report=photoReportFor(row);report.images[Number(input.dataset.photoImage)]=await compressPhoto(file);savePhotoReport(row);photoEditorRender();ap()}
+try{const row=S.rows[cur],rowIndex=cur;if(!row)throw new Error('Chưa chọn biên bản.');const report=photoReportFor(row),imageIndex=Number(input.dataset.photoImage),previousImage=report.images[imageIndex];report.images[imageIndex]=await compressPhoto(file);if(!savePhotoReport(row)){report.images[imageIndex]=previousImage;throw new Error(photoStoreError)}document.querySelector('.ty[value="p"]').checked=true;photoEditorRender();ap();if(cur===rowIndex)$('photo-status').textContent=`STT ${rowIndex+1}: đã lưu ${report.images.filter(Boolean).length}/4 ảnh cho biên bản này trên thiết bị hiện tại.`}
 catch(error){$('photo-status').textContent='Không thể chèn ảnh: '+error.message;input.value=''}});
 document.getElementById('photo-entry').addEventListener('click',event=>{
 const button=event.target.closest('[data-photo-clear]');if(!button)return;
@@ -451,8 +478,8 @@ if(t.dataset.g)S.g[t.dataset.g]=t.value;else if(t.dataset.r!=null){S.rows[t.data
 else if(t.id=='vl')S.vl=t.value;else if(t.id=='ck1')S.ck1=t.value;else if(t.id=='ck2')S.ck2=t.value;else if(t.id=='ck3')S.ck3=t.value;else if(t.id=='ck4')S.ck4=t.value;else if(t.id=='ckt1')S.t1=t.value;else if(t.id=='ckt2')S.t2=t.value;else if(t.id=='ckt3')S.t3=t.value;else if(t.id=='ckt4')S.t4=t.value;sv()});
 document.addEventListener('click',e=>{const t=e.target;
 if(t.dataset.del!=null){const idx=Number(t.dataset.del);if(!confirm('Xóa dòng '+(idx+1)+'? Thay đổi sẽ được đồng bộ lên Google Sheet.'))return;S.rows.splice(idx,1);sv();ui()}
-if(t.dataset.dup!=null){S.rows.splice(+t.dataset.dup+1,0,{...S.rows[t.dataset.dup]});sv();ui()}});
-$('add').onclick=()=>{const l=S.rows[S.rows.length-1];S.rows.push(l?{...l,so:''}:nr());cur=S.rows.length-1;if(S.rows.length>VB){const w=VB-VA;VB=S.rows.length;VA=Math.max(1,VB-w)}sv();ui()};
+if(t.dataset.dup!=null){const original=S.rows[+t.dataset.dup],copy={...original,photoReport:clonePhotoReport(photoReportFor(original),false)};delete copy._photoKey;S.rows.splice(+t.dataset.dup+1,0,copy);sv();ui()}});
+$('add').onclick=()=>{const l=S.rows[S.rows.length-1],row=l?{...l,so:'',photoReport:clonePhotoReport(null,true)}:nr();delete row._photoKey;S.rows.push(row);cur=S.rows.length-1;if(S.rows.length>VB){const w=VB-VA;VB=S.rows.length;VA=Math.max(1,VB-w)}sv();ui()};
 $('clr').onclick=()=>{if(confirm('Xóa toàn bộ dòng dữ liệu trên giao diện và đồng bộ danh sách mới lên Google Sheet?')){S.rows=[];sv();ui()}};
 $('paste').onclick=()=>{const t=prompt('Dán các dòng copy từ Excel (đúng thứ tự cột như bảng, ngày dạng dd/mm/yyyy):');if(!t)return;
 t.split(/\r?\n/).filter(x=>x.trim()).forEach(l=>{const v=l.split('\t'),r=nr();COLS.forEach((c,i)=>{let x=(v[i]||'').trim();if(c[2]=='d'){const m=x.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);x=m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:''}r[c[0]]=x||r[c[0]]});S.rows.push(r)});sv();ui()};
@@ -503,22 +530,22 @@ const st=(fs,rh)=>{p.style.setProperty('--ckf',fs+'pt');p.style.setProperty('--c
 let fs=8,rh=28;st(fs,rh);while(used()>avail&&rh>10){rh-=2;st(fs,rh)}while(used()>avail&&fs>5.5){fs-=0.25;st(fs,rh)}
 const ex=avail-used();if(ex>2&&rows.length){const add=ex/rows.length;rows.forEach(r=>{r.style.height=(r.getBoundingClientRect().height+add)+'px'})}})}
 function pict(r,i){
-const report=photoReportFor(r),images=report.images.map((src,index)=>`<figure class="photo-item">${src?`<img src="${esc(src)}" alt="Ảnh nghiệm thu ${index+1}">`:''}<figcaption>HÌNH ẢNH NGHIỆM THU CÔNG VIỆC</figcaption></figure>`).join('');
+const report=photoReportFor(r),images=report.images.map((src,index)=>`<figure class="photo-item">${src?`<img src="${esc(src)}" alt="Ảnh nghiệm thu ${index+1}">`:`<div class="photo-placeholder">CHƯA CHÈN ẢNH ${index+1}</div>`}<figcaption>HÌNH ẢNH NGHIỆM THU CÔNG VIỆC</figcaption></figure>`).join('');
 const position=esc(r.vt||'');
-return `<div class="pg photo-report">${FC()}<table class="photo-head"><colgroup><col style="width:15%"><col style="width:60%"><col style="width:25%"></colgroup><tr><td rowspan="2" class="photo-logo"><img src="${LOGO}" alt="The Grand Manhattan"></td><td class="photo-project">DỰ ÁN/PROJECT:${esc(G().duan)}</td><td rowspan="2" class="photo-company">E&amp;C</td></tr><tr><td class="photo-title"><b>HÌNH ẢNH NGHIỆM THU</b><i>PICTURES OF INSPECTION</i></td></tr></table><table class="photo-info"><colgroup><col style="width:15%"><col style="width:45%"><col style="width:15%"><col style="width:25%"></colgroup><tr><td class="photo-label">Chủ đầu tư<small>Investor</small></td><td class="photo-value">${esc(G().cdt)}</td><td class="photo-label">Mã dự án<small>Project code</small></td><td>${esc(G().pd)}</td></tr><tr><td class="photo-label">Tư vấn giám sát<small>Consultant</small></td><td class="photo-value">${esc(G().tv)}</td><td rowspan="2" class="photo-label photo-doc">Số hồ sơ<small>DOC No</small></td><td rowspan="2" class="photo-doc-value">${esc(mb(r,i))}</td></tr><tr><td class="photo-label">Nhà thầu<small>Contractor</small></td><td class="photo-value">${esc(G().nt)}</td></tr></table><table class="photo-locations"><colgroup><col style="width:17%"><col style="width:33%"><col style="width:17%"><col style="width:33%"></colgroup><tr><td class="photo-label">VỊ TRÍ NGHIỆM THU<small>INSPECTION LOCATION</small></td><td class="photo-value">${position}</td><td class="photo-label">BẢN VẼ THAM KHẢO:<small>DRAWING REFERENCE:</small></td><td class="photo-value">${esc(r.bv||'')}</td></tr><tr><td class="photo-label">HẠNG MỤC NGHIỆM THU<small>INSPECTION ITEM</small></td><td class="photo-value photo-item-value">${esc(nd(r))}</td><td class="photo-label">ĐÍNH KÈM<small>ATTACHMENT</small></td><td class="photo-value">${esc(report.attachment)}</td></tr></table><div class="photo-grid">${images}</div><div class="photo-result">- Kết quả: đạt đánh dấu √, không đạt đánh dấu X, không áp dụng đánh NA.<br>- Result: passed marked with √, failed marked with X, not available marked with NA.</div><div class="photo-comments"><b>Ý kiến / Comment:</b><p>${esc(report.comment)}</p></div><table class="photo-signatures"><colgroup><col style="width:50%"><col style="width:50%"></colgroup><tr><td>Bên mời nghiệm thu<br>Inspected &amp; Submitted by</td><td>Bên nghiệm thu<br>Inspected by</td></tr><tr><td class="photo-name">Tên / Name: ${esc(G().kt||r.gs||'')}</td><td class="photo-name">Tên / Name: ${esc(tg(r))}</td></tr><tr><td class="photo-name">Chức vụ / Position: Cán bộ kỹ thuật</td><td class="photo-name">Chức vụ / Position: ${esc(G().tgc||'')}</td></tr><tr><td class="photo-sign">Chữ ký / Signature:</td><td class="photo-sign">Chữ ký / Signature:</td></tr><tr><td class="photo-date">Ngày / Date: ${esc(Fz(r.td))}</td><td class="photo-date">Ngày / Date: ${esc(Fz(r.td))}</td></tr></table><div class="photo-distribution">Phân phối / Distribution: ${esc(report.distribution)}</div></div>`}
+return `<div class="pg photo-report">${FC()}<table class="photo-head"><colgroup><col style="width:15%"><col style="width:60%"><col style="width:25%"></colgroup><tr><td rowspan="2" class="photo-logo"><img src="${LOGO}" alt="The Grand Manhattan"></td><td class="photo-project">DỰ ÁN/PROJECT:${esc(G().duan)}</td><td rowspan="2" class="photo-company">E&amp;C</td></tr><tr><td class="photo-title"><b>HÌNH ẢNH NGHIỆM THU</b><i>PICTURES OF INSPECTION</i></td></tr></table><table class="photo-info"><colgroup><col style="width:15%"><col style="width:45%"><col style="width:15%"><col style="width:25%"></colgroup><tr><td class="photo-label">Chủ đầu tư<small>Investor</small></td><td class="photo-value">${esc(G().cdt)}</td><td class="photo-label">Mã dự án<small>Project code</small></td><td>${esc(G().pd)}</td></tr><tr><td class="photo-label">Tư vấn giám sát<small>Consultant</small></td><td class="photo-value">${esc(G().tv)}</td><td rowspan="2" class="photo-label photo-doc">Số hồ sơ<small>DOC No</small></td><td rowspan="2" class="photo-doc-value">${esc(mb(r,i))}</td></tr><tr><td class="photo-label">Nhà thầu<small>Contractor</small></td><td class="photo-value">${esc(G().nt)}</td></tr></table><table class="photo-locations"><colgroup><col style="width:17%"><col style="width:33%"><col style="width:17%"><col style="width:33%"></colgroup><tr><td class="photo-label">VỊ TRÍ NGHIỆM THU<small>INSPECTION LOCATION</small></td><td class="photo-value">${position}</td><td class="photo-label">BẢN VẼ THAM KHẢO:<small>DRAWING REFERENCE:</small></td><td class="photo-value">${esc(r.bv||'')}</td></tr><tr><td class="photo-label">HẠNG MỤC NGHIỆM THU<small>INSPECTION ITEM</small></td><td class="photo-value photo-item-value">${esc(nd(r))}</td><td class="photo-label">ĐÍNH KÈM<small>ATTACHMENT</small></td><td class="photo-value">${esc(report.attachment)}</td></tr></table><div class="photo-grid">${images}</div><div class="photo-result">- Kết quả: đạt đánh dấu √, không đạt đánh dấu X, không áp dụng đánh NA.<br>- Result: passed marked with √, failed marked with X, not available marked with NA.</div><div class="photo-comments"><b>Ý kiến / Comment:</b><p>${esc(report.comment)}</p></div><table class="photo-signatures"><colgroup><col style="width:50%"><col style="width:50%"></colgroup><tr><td>Bên mời nghiệm thu<br>Inspected &amp; Submitted by</td><td>Bên nghiệm thu<br>Inspected by</td></tr><tr><td class="photo-name">Tên / Name: ${esc(r.gs||G().kt||'')}</td><td class="photo-name">Tên / Name: ${esc(tg(r))}</td></tr><tr><td class="photo-name">Chức vụ / Position: Cán bộ kỹ thuật</td><td class="photo-name">Chức vụ / Position: ${esc(G().tgc||'')}</td></tr><tr><td class="photo-sign">Chữ ký / Signature:</td><td class="photo-sign">Chữ ký / Signature:</td></tr><tr><td class="photo-date">Ngày / Date: ${esc(Fz(r.td))}</td><td class="photo-date">Ngày / Date: ${esc(Fz(r.td))}</td></tr></table><div class="photo-distribution">Phân phối / Distribution: ${esc(report.distribution)}</div></div>`}
 const FN={y:ycnt,n:nb,b:bb,c:ck,p:pict};
 function sel(){const n=S.rows.length,t=$('rng').value.trim(),o=new Set();
 if(!t)for(let i=0;i<n;i++)o.add(i);else t.split(/[,;\s]+/).forEach(p=>{const m=p.match(/^(\d+)(?:-(\d+))?$/);if(m){const a=+m[1],b=+(m[2]||m[1]);for(let k=Math.min(a,b);k<=Math.max(a,b);k++)if(k>=1&&k<=n)o.add(k-1)}});
 return[...o].sort((a,b)=>a-b)}
 ui();
 
-const CFG0={url:'https://script.google.com/macros/s/AKfycbxLDEErWgkaGbHD3MP47r-vtDkYl0rJCmOoKhOxmPgoVdsedaFd_p3H3RL9CV5X1CjE/exec'}; /* điền sẵn URL Web App ở đây nếu đưa trang lên web cho cả team */
+const CFG0={url:'https://script.google.com/macros/s/AKfycbyQlHnWuaS5MTCezYLbu-ID9ibPnK4gvWwq5Z9t2VNn4tloVsWQ56kglSUe_Jy3VxjT/exec'}; /* điền sẵn URL Web App ở đây nếu đưa trang lên web cho cả team */
 const OLD_CFG_URL='https://script.google.com/macros/s/AKfycbx13YZZxkbggnueggZf7EtUpNyInAvTWKjy6i2xlAujfolrawzLkA4Wetn-d3TvwpIr/exec';
 let CF={};try{CF=JSON.parse(localStorage.getItem('hsnt_cfg'))||{}}catch(e){}if(CF.url===OLD_CFG_URL)CF.url=CFG0.url;CF=Object.assign({},CFG0,CF);
 var TK='',UID='',UNAME='',REV=0,FORCE=false;
 async function call(act,p){const r=await fetch(CF.url.trim(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:act,token:TK,rev:REV,force:FORCE},p))});
 const j=await r.json();if(!j.ok){const e=new Error(j.error||'lỗi');e.code=j.error;throw e}if(j.rev)REV=j.rev;return j}
-function mk(){let ok=()=>{},bad=()=>{};const o={withSuccessHandler(f){ok=f;return o},withFailureHandler(f){bad=f;return o},loadAll(){call('load').then(ok,bad)},saveAll(p){call('save',p).then(ok,bad)}};return o}
+function mk(){let ok=()=>{},bad=()=>{};const o={withSuccessHandler(f){ok=f;return o},withFailureHandler(f){bad=f;return o},loadAll(){call('load').then(j=>{applyNextRecordNumbers(j.nextRecordNumbers);ok(j)},bad)},saveAll(p){call('save',p).then(j=>{applyNextRecordNumbers(j.nextRecordNumbers);ok(j)},bad)}};return o}
 const mkG=()=>CF.url?{withSuccessHandler:f=>mk().withSuccessHandler(f),withFailureHandler:f=>mk().withFailureHandler(f)}:null;
 const EM={badlogin:'Sai ID hoặc mật khẩu',locked:'Tài khoản đã bị khóa',toomany:'Nhập sai quá nhiều lần, thử lại sau 10 phút',session:'Phiên đăng nhập đã hết hạn'};
 const em=e=>e&&EM[e.code]?EM[e.code]:(e&&e.message==='Failed to fetch'?'không kết nối được tới URL (kiểm tra URL /exec và quyền “Bất kỳ ai”)':(e&&e.message||e));
@@ -532,7 +559,7 @@ if(!S.rows.length){st.textContent='';$('pv').innerHTML='<p class="np">Chưa có 
 if(!ty.length){st.textContent='Chưa chọn loại biên bản.';$('pv').innerHTML='';return 0}
 let ix=sel();if(!full&&blank)ix=[Math.min(cur,S.rows.length-1)];
 if(!ix.length){st.textContent='Không có STT phù hợp.';$('pv').innerHTML='';return 0}
-if(ty.includes('p')){
+if(full&&ty.includes('p')){
 const missing=ix.find(index=>photoReportFor(S.rows[index]).images.some(image=>!image));
 if(missing!=null){st.textContent=`Biên bản STT ${missing+1}: cần nhập đủ Ảnh 1, Ảnh 2, Ảnh 3 và Ảnh 4.`;$('photo-row').value=String(missing);cur=missing;photoEditorRender();$('pv').innerHTML='';return 0}}
 let h=[];if($('ord').value=='r')ix.forEach(i=>ty.forEach(t=>h.push(FN[t](S.rows[i],i))));else ty.forEach(t=>ix.forEach(i=>h.push(FN[t](S.rows[i],i))));
@@ -576,7 +603,8 @@ async function autoSaveToGoogle(){
   autoSaving=true;
   stat('Đang tự động đồng bộ thay đổi lên Google Sheet…');
   try{
-    await call('save',payload());
+    const saved=await call('save',payload());
+    applyNextRecordNumbers(saved.nextRecordNumbers);
     if(seq===changeSeq){
       dirty=false;mark();ls();
       stat('✔ Đã tự động đồng bộ dữ liệu hồ sơ lên Google Sheet lúc '+new Date().toLocaleTimeString('vi-VN')+'.');
@@ -606,7 +634,7 @@ lkScheduleRefresh();lkXLoad();save()},e=>{
 if(e&&e.code=='session'){busy=false;showLogin('Phiên đăng nhập hết hạn, hãy đăng nhập lại.');return}
 lkNote=' · ⚠ CHƯA ghi được lũy kế ('+em(e)+') – bấm gửi lại sau khi kiểm tra Apps Script';save()})}
 function pull(){stat('Đang tải dữ liệu của bạn…');ready=false;
-GAS.withSuccessHandler(res=>{try{UNAME=res.name||UID;const d=res.data,h=(d[0]||[]).map(nz);
+GAS.withSuccessHandler(res=>{try{UNAME=res.name||UID;applyNextRecordNumbers(res.nextRecordNumbers);const d=res.data,h=(d[0]||[]).map(nz);
 const ix=COLS.map((c,i)=>{let k=h.indexOf(nz(c[1]));if(k<0)k=h.indexOf(c[0]);return k<0?i:k});
 S.rows=d.slice(1).filter(v=>v.some(x=>String(x).trim())).map(v=>{const r={};COLS.forEach((c,i)=>{const x=String(v[ix[i]]==null?'':v[ix[i]]).trim();r[c[0]]=c[2]=='d'?iso(x):x});return r});
 (res.chung||[]).slice(1).forEach(v=>{const k=String(v[0]||'').trim(),x=v[1]==null?'':String(v[1]);if(GF.some(f=>f[0]==k))S.g[k]=x;else if(['vl','ck1','ck2','ck3','ck4','t1','t2','t3','t4','ckv'].includes(k))S[k]=x;else if(k.indexOf('cat_')==0&&(k.slice(4) in CAT0)){cat();S.cat[k.slice(4)]=x}else if(k=='hf'){try{const o=JSON.parse(x);if(o&&typeof o=='object')S.hf=Object.assign({h:'',f:'',ha:'c',fa:'c'},o)}catch(_){}}else if(k=='mg'){const a=x.split(',').map(Number);if(a.length==5&&a.every(isFinite))S.m={t:a[0],b:a[1],l:a[2],r:a[3],fit:a[4]}}});
