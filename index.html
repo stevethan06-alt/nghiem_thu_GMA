@@ -26,6 +26,32 @@ table.gr{border-collapse:collapse;min-width:2000px}
 #record-class-buttons{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 #record-class-buttons button.class-number-button{background:var(--ac2);border-color:var(--bd);color:var(--ac)}
 #record-class-buttons button.active{border-color:var(--ac);font-weight:700}
+#entry-table.compact{max-height:60vh}
+#entry-table.compact table.gr{min-width:900px;width:100%;table-layout:fixed}
+#entry-table.compact th:nth-child(1){width:5%}
+#entry-table.compact th:nth-child(2){width:19%}
+#entry-table.compact th:nth-child(3){width:14%}
+#entry-table.compact th:nth-child(4){width:12%}
+#entry-table.compact th:nth-child(5),#entry-table.compact th:nth-child(6){width:18%}
+#entry-table.compact th:nth-child(7){width:14%}
+#entry-table.compact .gr th{padding:7px 6px}
+#entry-table.compact .gr td{padding:7px 8px;vertical-align:middle}
+#entry-table.compact .compact-main{font-weight:600;line-height:1.3}
+#entry-table.compact .compact-sub{display:block;color:var(--mu);font-size:11px;line-height:1.35;margin-top:2px}
+#entry-table.compact .compact-date{white-space:nowrap}
+#entry-table.compact .compact-actions{white-space:nowrap;text-align:center}
+#entry-table.compact .compact-actions button{padding:4px 8px}
+#entry-table.compact .compact-edit-row>td{padding:10px;background:var(--bg)}
+#entry-table.compact .compact-edit-panel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#entry-table.compact .compact-group{min-width:0;padding:10px;background:var(--pn);border:1px solid var(--bd);border-radius:7px}
+#entry-table.compact .compact-group h3{margin:0 0 8px;font-size:13px}
+#entry-table.compact .compact-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#entry-table.compact .compact-field{min-width:0}
+#entry-table.compact .compact-field input,#entry-table.compact .compact-field select{min-width:0;min-height:34px;background:var(--pn)}
+#entry-table.compact .compact-field textarea{min-height:58px;background:var(--pn)}
+#entry-table.compact .compact-field.wide{grid-column:1/-1}
+#entry-table.compact .compact-close{grid-column:1/-1;justify-self:end}
+@media(max-width:760px){#entry-table.compact .compact-edit-panel{grid-template-columns:1fr}#entry-table.compact table.gr{min-width:760px}}
 .filter-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .filter-head button{border:0;background:transparent;color:var(--mu);padding:0 2px;font-size:13px}
 .filter-head button.filtered{color:var(--ac);font-weight:700}
@@ -205,10 +231,10 @@ table.gr{border-collapse:collapse;min-width:2000px}
 <div style="grid-column:1/-1;font-size:12px;color:#666">Chèn {trang} = số trang hiện tại, {tong} = tổng số trang. Header/footer nằm trong vùng lề trên/dưới nên cần để lề tối thiểu ~10mm.</div></div></div></details>
 <div class="bar">
 <div><button id="add">+ Thêm dòng</button> <button class="s" id="paste">Dán từ Excel</button> <button class="s" id="clr">Xóa hết</button></div>
-<button class="s" type="button" id="reset-table-filters">Xóa tất cả bộ lọc</button>
+<div><button class="s" type="button" id="entry-layout-toggle" aria-pressed="true">Hiện bảng đầy đủ</button> <button class="s" type="button" id="reset-table-filters">Xóa tất cả bộ lọc</button></div>
 </div>
 <div id="record-class-buttons" aria-label="Phân loại biên bản"></div>
-<div class="tw"><table class="gr"><thead id="th"></thead><tbody id="tb"></tbody></table></div>
+<div id="entry-table" class="tw compact"><table class="gr"><thead id="th"></thead><tbody id="tb"></tbody></table></div>
 <details open id="photo-entry"><summary>4. Hình ảnh nghiệm thu (chọn biên bản, nhập đủ Ảnh 1–4)</summary><div class="in">
 <div><label for="photo-row">Biên bản cần chèn ảnh</label><select id="photo-row"></select></div>
 <p style="color:var(--mu);font-size:12px;margin:6px 0">Mỗi biên bản có bộ 4 ảnh riêng. Chọn biên bản khác để nhập ảnh của biên bản đó; ảnh đã nhập vẫn được giữ. Bấm “In biên bản đang chọn kèm ảnh” để in đúng biên bản này. Ảnh lưu trên trình duyệt/thiết bị này, không tải lên Google Sheet.</p>
@@ -264,7 +290,7 @@ const T1="LẮP DỰNG KHUNG CỬA // DOOR/ WINDOW FRAME INSTALLATION",T2="LẮP
 function mgck(){if(String(S.ckv)!==CKV){S.ck1=C1;S.ck2=C2;S.ck3=C3;S.ck4=C4;S.t1=T1;S.t2=T2;S.t3=T3;S.t4=T4;S.ckv=CKV}}
 const CHECKLISTS=[['1','Khung phụ'],['2','Khung chính'],['3','Vách kính phòng tắm'],['4','Lan can']];
 const ckSelect=(value,attrs='')=>`<select ${attrs}>${CHECKLISTS.map(([v,n])=>`<option value="${v}" ${String(value||'1')===v?'selected':''}>${n}</option>`).join('')}</select>`;
-const COLS=[['ten','Tên công việc','Nghiệm thu lắp đặt'],['ma','Mã công tác','PO-4,5,6'],['hm','Hạng mục',''],['vt','Vị trí',''],['gui','Ngày gửi YCNT','d'],['ns','NTNB bắt đầu','13h00'],['ne','NTNB kết thúc','14h00'],['nd','Ngày NTNB','d'],['ts','NT bắt đầu','14h00'],['te','NT kết thúc','15h00'],['td','Ngày NT','d'],['so','Số biên bản (trống = STT)',''],['bv','Bản vẽ tham chiếu','GMA.Q1.E&C-SDS-043-REV-01'],['tg','TVGS viên',''],['gs','Cán bộ KT hiện trường',''],['ck','Mẫu checklist','1'],['thap','Tháp',''],['tang','Tầng',''],['loai','Nghiệm thu gì',''],['ct','Đối tượng đã NT / tổng',''],['can','Căn hộ',''],['evid','Mã ghi sổ',''],['posted','Đã ghi lũy kế',''],['ghichu','Ghi chú nghiệm thu','']];
+const COLS=[['ten','Tên công việc','Nghiệm thu lắp đặt'],['ma','Mã công tác','PO-4,5,6'],['hm','Hạng mục',''],['vt','Vị trí',''],['gui','Ngày gửi YCNT','d'],['ns','Thời gian NTNB bắt đầu','13h00'],['ne',' Thời gian NTNB kết thúc','14h00'],['nd','Ngày NTNB','d'],['ts','NTCV bắt đầu','14h00'],['te','NTCV kết thúc','15h00'],['td','Ngày NTCV','d'],['so','Số biên bản ',''],['bv','Bản vẽ tham chiếu','GMA.Q1.E&C-SDS-043-REV-01'],['tg','TVGS viên',''],['gs','Cán bộ KT hiện trường',''],['ck','Mẫu checklist','1'],['thap','Tháp',''],['tang','Tầng',''],['loai','Nghiệm thu gì',''],['ct','Đối tượng đã NT / tổng',''],['can','Căn hộ',''],['evid','Mã ghi sổ',''],['posted','Đã ghi lũy kế',''],['ghichu','Ghi chú nghiệm thu','']];
 const mig3=()=>{if(S.ck3==C3_OLD)S.ck3=C3;if(S.t3=='LAN CAN VÀ KÍNH PHÒNG TẮM // RAILING AND SHOWER GLASS INSTALLATION')S.t3='VÁCH KÍNH PHÒNG TẮM // SHOWER SCREEN INSTALLATION'};
 let S;
 if(!S)S={g:{},rows:[],ck1:C1,ck2:C2,ck3:C3,ck4:C4,t4:T4,t1:T1,t2:T2,t3:T3,ckv:CKV,vl:VL};
@@ -276,6 +302,12 @@ const $=i=>document.getElementById(i),ls=()=>{try{if(UID)localStorage.setItem('h
 const nr=()=>{const r={};COLS.forEach(c=>r[c[0]]=c[2]=='d'?'':c[2]);return r};
 const HID=['thap','tang','loai','ct','can','evid','posted','ghichu'],GRID=()=>COLS.filter(c=>HID.indexOf(c[0])<0);
 const RECORD_CLASSES=['Khung chính','Khung phụ','Lan can','Vách kính'];
+const ENTRY_GROUPS=[
+{title:'Thông tin biên bản',fields:['ten','ma','hm','vt','thap','tang','can','loai']},
+{title:'Thời gian nghiệm thu',fields:['gui','ns','ne','nd','ts','te','td']},
+{title:'Hồ sơ và nội dung',fields:['so','bv','tg','gs','ck','ct','ghichu']}
+];
+let compactEntry=true,editingRecord=null;
 let nextRecordNumbers={};
 const TABLE_FILTERS={},QF_TABLE_FILTERS={};
 let selectedRecordClass='';
@@ -300,7 +332,17 @@ return hasRows?(max===null?undefined:max+1):nextRecordNumbers[category]}
 function tableColumnValue(row,index,key){
 if(key==='__class')return recordClass(row);
 if(key==='__stt')return String(index+1);
+if(key==='__work')return[row.ten,row.hm,row.ma].filter(Boolean).join(' · ');
+if(key==='__location')return[row.vt,row.thap,row.tang].filter(Boolean).join(' · ');
+if(key==='__internal')return[row.nd,row.ns,row.ne].filter(Boolean).join(' · ');
+if(key==='__acceptance')return[row.td,row.ts,row.te].filter(Boolean).join(' · ');
 return String(row[key]||'')}
+function compactPlace(row){
+const main=String(row.vt||'').trim()||[row.thap,row.tang,row.can].filter(Boolean).join(' · ');
+const mainNorm=filterNorm(main),extra=[row.thap,row.tang,row.can].filter(value=>value&&
+!mainNorm.includes(filterNorm(value))).join(' · ');
+return{main:main||'—',extra:extra}
+}
 function rowMatchesFilters(row,index){
 if(selectedRecordClass&&recordClass(row)!==selectedRecordClass)return false;
 return Object.entries(TABLE_FILTERS).every(([key,values])=>values.includes(tableColumnValue(row,index,key)))}
@@ -318,7 +360,7 @@ if(tableSort.key)rows.sort((a,b)=>tableColumnValue(a.row,a.index,tableSort.key).
 return rows}
 function renderRecordClasses(){
 const container=$('record-class-buttons');if(!container)return;
-container.innerHTML=RECORD_CLASSES.map(category=>{const next=nextRecordNumberForClass(category);return `<button type="button" class="s class-number-button${selectedRecordClass===category?' active':''}" data-class-filter="${esc(category)}">${esc(category)} · BB tiếp theo: ${Number.isInteger(next)?next:'Chưa có dữ liệu tổng hợp'}</button>`}).join('')+
+container.innerHTML=RECORD_CLASSES.map(category=>{const next=nextRecordNumberForClass(category);return `<button type="button" class="s class-number-button${selectedRecordClass===category?' active':''}" data-class-filter="${esc(category)}">${esc(category)} · Biên bản tiếp theo: ${Number.isInteger(next)?next:'Chưa có dữ liệu tổng hợp'}</button>`}).join('')+
 (selectedRecordClass?'<button type="button" class="s" data-class-filter="">Bỏ lọc hạng mục</button>':'')}
 function applyNextRecordNumbers(numbers){
 if(!numbers||typeof numbers!=='object')return;
@@ -348,13 +390,42 @@ menu.style.left=left+'px';menu.style.top=top+'px'}
 function ui0(){
 $('gl').innerHTML=GF.map(f=>`<div><label>${f[1]}</label><input data-g="${f[0]}" value="${esc(S.g[f[0]])}"></div>`).join('')+`<div style="grid-column:1/-1"><label>Tài liệu nghiệm thu vật liệu – mỗi dòng "Số/No | Ngày" (dùng cho BBNT nội bộ)</label><textarea id="vl">${esc(S.vl)}</textarea></div>`;
 $('ck1').value=S.ck1;$('ck2').value=S.ck2;$('ck3').value=S.ck3;$('ck4').value=S.ck4;$('ckt1').value=S.t1;$('ckt2').value=S.t2;$('ckt3').value=S.t3;$('ckt4').value=S.t4;
-const columns=[['__stt','STT'],['__class','Nhóm biên bản'],...GRID().map(c=>[c[0],c[1]])];
-$('th').innerHTML='<tr>'+columns.map(([key,title])=>`<th><div class="filter-head"><span>${title}</span>${key==='__class'?'':`<button type="button" data-filter-key="${key}" aria-label="Lọc ${title}" title="Lọc ${title}">▼</button>`}</div></th>`).join('')+'<th></th></tr>';
+const compactColumns=[['__stt','STT'],['__work','Tên công việc · Hạng mục'],['__location','Vị trí'],['gui','Ngày gửi'],['__internal','Nghiệm thu nội bộ'],['__acceptance','Nghiệm thu TVGS'],['__actions','Thao tác']];
+const columns=compactEntry?compactColumns:[['__stt','STT'],['__class','Nhóm biên bản'],...GRID().map(c=>[c[0],c[1]])];
+$('entry-table').classList.toggle('compact',compactEntry);
+$('entry-layout-toggle').textContent=compactEntry?'Hiện bảng đầy đủ':'Dùng giao diện gọn';
+$('entry-layout-toggle').setAttribute('aria-pressed',String(compactEntry));
+$('th').innerHTML='<tr>'+columns.map(([key,title])=>`<th><div class="filter-head"><span>${title}</span>${key==='__class'||key==='__actions'?'':`<button type="button" data-filter-key="${key}" aria-label="Lọc ${title}" title="Lọc ${title}">▼</button>`}</div></th>`).join('')+'</tr>';
 const rows=filteredRows();
-$('tb').innerHTML=rows.slice(VA-1,VB).map(({row:r,index:i})=>`<tr data-index="${i}"><td class="n">${i+1}</td><td class="n">${esc(recordClass(r))}</td>${GRID().map(c=>`<td>${c[0]=='ck'?ckSelect(r[c[0]],`data-r="${i}" data-k="${c[0]}"`):`<input data-r="${i}" data-k="${c[0]}" ${c[2]=='d'?'type="date"':''} value="${esc(r[c[0]])}">`}</td>`).join('')}<td class="n"><button class="s" data-dup="${i}">Nhân bản</button> <button class="s" data-del="${i}">Xóa</button></td></tr>`).join('');
+$('tb').innerHTML=rows.slice(VA-1,VB).map(({row:r,index:i})=>{
+const main=compactEntry
+?`<tr data-index="${i}"><td class="n">${i+1}</td><td class="compact-work"><span class="compact-main">${esc(r.ten||'—')}</span><small class="compact-sub">${esc([r.hm,r.ma].filter(Boolean).join(' · ')||recordClass(r))}</small></td><td class="compact-location"><span class="compact-main">${esc(compactPlace(r).main)}</span><small class="compact-sub">${esc(compactPlace(r).extra)}</small></td><td class="compact-date">${esc(F2(r.gui)||'—')}</td><td class="compact-internal"><span class="compact-main">${esc(F2(r.nd)||'Ngày chưa nhập')}</span><small class="compact-sub">${esc([r.ns,r.ne].filter(Boolean).join(' – ')||'Chưa nhập giờ')}</small></td><td class="compact-acceptance"><span class="compact-main">${esc(F2(r.td)||'Ngày chưa nhập')}</span><small class="compact-sub">${esc([r.ts,r.te].filter(Boolean).join(' – ')||'Chưa nhập giờ')}</small></td><td class="compact-actions"><button type="button" class="s" data-edit="${i}" aria-expanded="${editingRecord===i}">${editingRecord===i?'Đóng':'✎ Sửa'}</button> <button type="button" class="s" data-dup="${i}" aria-label="Nhân bản biên bản ${i+1}" title="Nhân bản">⧉</button> <button type="button" class="s" data-del="${i}" aria-label="Xóa biên bản ${i+1}" title="Xóa">×</button></td></tr>`
+:`<tr data-index="${i}"><td class="n">${i+1}</td><td class="n">${esc(recordClass(r))}</td>${GRID().map(c=>`<td>${c[0]=='ck'?ckSelect(r[c[0]],`data-r="${i}" data-k="${c[0]}"`):`<input data-r="${i}" data-k="${c[0]}" ${c[2]=='d'?'type="date"':''} value="${esc(r[c[0]])}">`}</td>`).join('')}<td class="n"><button class="s" data-dup="${i}">Nhân bản</button> <button class="s" data-del="${i}">Xóa</button></td></tr>`;
+const editor=compactEntry&&editingRecord===i?renderCompactEditor(r,i,columns.length):'';
+return main+editor
+}).join('');
 renderRecordClasses();
 document.querySelectorAll('#th [data-filter-key]').forEach(button=>button.classList.toggle('filtered',Object.prototype.hasOwnProperty.call(TABLE_FILTERS,button.dataset.filterKey)));
 photoEditorRender();
+}
+function renderCompactEditor(row,index,columnCount){
+const fields=ENTRY_GROUPS.map(group=>`<section class="compact-group"><h3>${group.title}</h3><div class="compact-fields">${group.fields.map(key=>{
+const column=COLS.find(item=>item[0]===key),wide=key==='ct'||key==='ghichu';
+const attrs=`data-r="${index}" data-k="${key}"`;
+const control=key==='ck'?ckSelect(row[key],attrs):wide?`<textarea ${attrs}>${esc(row[key]||'')}</textarea>`:`<input ${attrs} ${column[2]==='d'?'type="date"':''} value="${esc(row[key]||'')}">`;
+return `<div class="compact-field${wide?' wide':''}"><label>${column[1]}</label>${control}</div>`
+}).join('')}</div></section>`).join('');
+return `<tr class="compact-edit-row" data-editor-for="${index}"><td colspan="${columnCount}"><div class="compact-edit-panel">${fields}<button type="button" class="s compact-close" data-edit="${index}" aria-expanded="true">Đóng phần sửa</button></div></td></tr>`
+}
+function updateCompactSummaryRow(index){
+if(!compactEntry)return;
+const row=S.rows[index],element=document.querySelector(`#tb tr[data-index="${index}"]`);
+if(!row||!element)return;
+element.querySelector('.compact-work').innerHTML=`<span class="compact-main">${esc(row.ten||'—')}</span><small class="compact-sub">${esc([row.hm,row.ma].filter(Boolean).join(' · ')||recordClass(row))}</small>`;
+element.querySelector('.compact-location').innerHTML=`<span class="compact-main">${esc(compactPlace(row).main)}</span><small class="compact-sub">${esc(compactPlace(row).extra)}</small>`;
+element.querySelector('.compact-date').textContent=F2(row.gui)||'—';
+element.querySelector('.compact-internal').innerHTML=`<span class="compact-main">${esc(F2(row.nd)||'Ngày chưa nhập')}</span><small class="compact-sub">${esc([row.ns,row.ne].filter(Boolean).join(' – ')||'Chưa nhập giờ')}</small>`;
+element.querySelector('.compact-acceptance').innerHTML=`<span class="compact-main">${esc(F2(row.td)||'Ngày chưa nhập')}</span><small class="compact-sub">${esc([row.ts,row.te].filter(Boolean).join(' – ')||'Chưa nhập giờ')}</small>`;
 }
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 function photoSignature(row){return JSON.stringify([row.ma,row.so,row.gui,row.td,row.vt,row.hm,row.loai,row.ten].map(value=>String(value||'').trim()))}
@@ -465,7 +536,7 @@ closeExcelFilter();if(target==='qf')qfApplyTableFilters();else{VA=1;ui()}
 }});
 document.addEventListener('change',event=>{
 if(event.target.matches('#excel-filter-menu [data-filter-value]')){const value=event.target.dataset.filterValue;if(event.target.checked)filterDraft.selected.add(value);else filterDraft.selected.delete(value)}
-if(event.target.matches('[data-r][data-k]'))ui()
+if(event.target.matches('[data-r][data-k]')){const index=Number(event.target.dataset.r),key=event.target.dataset.k;if(event.target.tagName==='SELECT'){S.rows[index][key]=event.target.value;sv()}ui()}
 });
 document.addEventListener('input',event=>{
 if(!event.target.matches('#excel-filter-menu [data-filter-search]'))return;
@@ -474,11 +545,17 @@ document.querySelectorAll('#excel-filter-menu .excel-filter-option').forEach(opt
 });
 document.getElementById('reset-table-filters').onclick=()=>{Object.keys(TABLE_FILTERS).forEach(key=>delete TABLE_FILTERS[key]);Object.keys(QF_TABLE_FILTERS).forEach(key=>delete QF_TABLE_FILTERS[key]);selectedRecordClass='';tableSort={key:'',direction:1};qfApplyTableFilters();VA=1;ui()};
 document.addEventListener('input',e=>{const t=e.target;if(t.closest('#excel-filter-menu'))return;
-if(t.dataset.g)S.g[t.dataset.g]=t.value;else if(t.dataset.r!=null){S.rows[t.dataset.r][t.dataset.k]=t.value;const row=document.querySelector(`#tb tr[data-index="${t.dataset.r}"]`);if(row){row.cells[1].textContent=recordClass(S.rows[t.dataset.r]);row.hidden=!rowMatchesFilters(S.rows[t.dataset.r],Number(t.dataset.r))}renderRecordClasses();vr()}
+if(t.dataset.g)S.g[t.dataset.g]=t.value;else if(t.dataset.r!=null){S.rows[t.dataset.r][t.dataset.k]=t.value;const row=document.querySelector(`#tb tr[data-index="${t.dataset.r}"]`);if(row){if(compactEntry)updateCompactSummaryRow(Number(t.dataset.r));else row.cells[1].textContent=recordClass(S.rows[t.dataset.r]);row.hidden=!rowMatchesFilters(S.rows[t.dataset.r],Number(t.dataset.r))}renderRecordClasses();vr()}
 else if(t.id=='vl')S.vl=t.value;else if(t.id=='ck1')S.ck1=t.value;else if(t.id=='ck2')S.ck2=t.value;else if(t.id=='ck3')S.ck3=t.value;else if(t.id=='ck4')S.ck4=t.value;else if(t.id=='ckt1')S.t1=t.value;else if(t.id=='ckt2')S.t2=t.value;else if(t.id=='ckt3')S.t3=t.value;else if(t.id=='ckt4')S.t4=t.value;sv()});
-document.addEventListener('click',e=>{const t=e.target;
-if(t.dataset.del!=null){const idx=Number(t.dataset.del);if(!confirm('Xóa dòng '+(idx+1)+'? Thay đổi sẽ được đồng bộ lên Google Sheet.'))return;S.rows.splice(idx,1);sv();ui()}
-if(t.dataset.dup!=null){const original=S.rows[+t.dataset.dup],copy={...original,photoReport:clonePhotoReport(photoReportFor(original),false)};delete copy._photoKey;S.rows.splice(+t.dataset.dup+1,0,copy);sv();ui()}});
+document.getElementById('entry-layout-toggle').addEventListener('click',()=>{
+compactEntry=!compactEntry;
+editingRecord=null;
+ui()
+});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-edit]')||e.target;
+if(t.dataset.edit!=null){const index=Number(t.dataset.edit);editingRecord=editingRecord===index?null:index;ui();return}
+if(t.dataset.del!=null){const idx=Number(t.dataset.del);if(!confirm('Xóa dòng '+(idx+1)+'? Thay đổi sẽ được đồng bộ lên Google Sheet.'))return;S.rows.splice(idx,1);if(editingRecord===idx)editingRecord=null;else if(editingRecord>idx)editingRecord--;sv();ui()}
+if(t.dataset.dup!=null){const idx=Number(t.dataset.dup),original=S.rows[idx],copy={...original,photoReport:clonePhotoReport(photoReportFor(original),false)};delete copy._photoKey;S.rows.splice(idx+1,0,copy);if(editingRecord>idx)editingRecord++;sv();ui()}});
 $('add').onclick=()=>{const l=S.rows[S.rows.length-1],row=l?{...l,so:'',photoReport:clonePhotoReport(null,true)}:nr();delete row._photoKey;S.rows.push(row);cur=S.rows.length-1;if(S.rows.length>VB){const w=VB-VA;VB=S.rows.length;VA=Math.max(1,VB-w)}sv();ui()};
 $('clr').onclick=()=>{if(confirm('Xóa toàn bộ dòng dữ liệu trên giao diện và đồng bộ danh sách mới lên Google Sheet?')){S.rows=[];sv();ui()}};
 $('paste').onclick=()=>{const t=prompt('Dán các dòng copy từ Excel (đúng thứ tự cột như bảng, ngày dạng dd/mm/yyyy):');if(!t)return;
@@ -687,7 +764,7 @@ const qfK=()=>$('qt').value.replace('Tháp ','');
 const qfF=()=>+($('qg').value.replace('Tầng ',''));
 const qfKD=()=>$('qt').value==KD_T;
 function qfOpt(id,arr){const e=$(id),v=e.value;e.innerHTML=arr.map(x=>`<option>${esc(x)}</option>`).join('');if(v&&arr.indexOf(v)>=0)e.value=v}
-const QF=[['ma','Mã công tác'],['gui','Ngày gửi YCNT','date'],['ns','NTNB bắt đầu'],['ne','NTNB kết thúc'],['nd','Ngày NTNB','date'],['ts','NT bắt đầu'],['te','NT kết thúc'],['td','Ngày NT','date'],['so','Số biên bản (trống = STT)'],['bv','Bản vẽ tham chiếu'],['tg','TVGS viên'],['gs','Cán bộ KT hiện trường'],['ck','Mẫu checklist']];
+const QF=[['ma','Mã hồ sơ'],['gui','Ngày gửi YCNT','date'],['ns','NTNB bắt đầu'],['ne','NTNB kết thúc'],['nd','Ngày NTNB','date'],['ts','NT bắt đầu'],['te','NT kết thúc'],['td','Ngày NT','date'],['so','Số biên bản (trống = STT)'],['bv','Bản vẽ tham chiếu'],['tg','TVGS viên'],['gs','Cán bộ KT hiện trường'],['ck','Mẫu checklist']];
 let QI={},qTenT=false;
 function qfInfoRender(){$('qinfo').innerHTML='<div><label>Tên công việc</label><input id="qten"></div>'+QF.map(f=>`<div><label>${f[1]}</label>${f[0]=='ck'?ckSelect(QI.ck,'data-qi="ck"'):`<input ${f[2]?'type="date"':''} data-qi="${f[0]}" value="${esc(QI[f[0]]||'')}">`}</div>`).join('');$('qten').value=qTenT?($('qten').dataset.v||''):''}
 function qfInfoLoad(){const l=S.rows[S.rows.length-1],d=nr();QI={};QF.forEach(f=>QI[f[0]]=l?(f[0]=='so'?'':(l[f[0]]||'')):d[f[0]]);qTenT=false;qfInfoRender()}
