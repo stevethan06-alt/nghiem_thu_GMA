@@ -160,6 +160,28 @@ table.gr{border-collapse:collapse;min-width:2000px}
 .fx table.sb tr.sgr td{height:12mm}.fx table.sb td.cm{height:10mm}.fx table.sb{margin-top:2mm}
 .pg.ck.fx{padding-top:min(var(--mt,8mm),8mm);padding-bottom:min(var(--mb,12mm),8mm)}
 .fx table.cl td{padding:.5mm 1.2mm}.fx table.rw td{padding:.4mm 1.2mm}.fx table.rw tr.th td{padding:.6mm 1mm}
+.dl-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.dl-path{flex:1;min-width:180px;display:flex;flex-wrap:wrap;gap:2px;align-items:center}
+.dl-path button{background:transparent;border:0;color:var(--ac);padding:2px 4px;text-decoration:underline}
+.dl-up{display:inline-block;cursor:pointer;border:1px solid var(--ac);color:var(--ac);border-radius:6px;padding:7px 12px}
+.dl-msg{min-height:18px;font-size:12px;color:var(--mu);margin-bottom:6px}
+.dl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;min-height:80px;border:1px dashed transparent;border-radius:8px}
+.dl.drag .dl-grid{border-color:var(--ac);background:var(--ac2)}
+.dl-it{position:relative;border:1px solid var(--bd);border-radius:7px;background:var(--bg);padding:6px;font-size:12px;cursor:pointer;overflow:hidden;text-align:center}
+.dl-it.on{outline:2px solid var(--ac);background:var(--ac2)}
+.dl-th{height:84px;display:flex;align-items:center;justify-content:center;font-size:30px;background:var(--pn);border-radius:4px;margin-bottom:4px}
+.dl-th img{max-width:100%;max-height:100%;object-fit:contain}
+.dl-it span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl-rm{position:absolute;top:2px;right:2px;padding:1px 5px;font-size:11px;background:var(--pn)}
+.dl-modal{width:min(900px,96vw);padding:0;border:1px solid var(--bd);border-radius:10px;background:var(--pn);color:var(--tx)}
+.dl-modal::backdrop{background:rgba(0,0,0,.45)}
+.dl-mh,.dl-mf{display:flex;gap:8px;align-items:center;padding:10px 14px}
+.dl-mh{justify-content:space-between;border-bottom:1px solid var(--bd)}
+.dl-mf{border-top:1px solid var(--bd);justify-content:flex-end}.dl-cnt{flex:1;color:var(--mu);font-size:12px}
+.dl-mb{padding:12px 14px;overflow:auto;max-height:62vh}
+.att-it{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;margin:4px 0;background:var(--bg)}
+.pg.pdf-pg{padding:0!important;display:flex!important;align-items:center;justify-content:center}
+.pdf-pg img{width:100%;height:100%;object-fit:contain}.pdf-wait{color:#555;font:14px sans-serif;padding:20px;text-align:center}
 </style></head><body><div id="lg" class="np"><div class="box"><h1>Đăng nhập</h1><p class="sub">Dữ liệu hồ sơ của bạn được tải về sau khi đăng nhập.</p>
 <div><label>URL Web App (Apps Script)</label><input id="lu" autocomplete="off"></div>
 <div style="margin-top:8px"><label>ID người dùng</label><input id="li" autocomplete="username"></div>
@@ -249,6 +271,16 @@ table.gr{border-collapse:collapse;min-width:2000px}
 <div style="grid-column:1/-1"><label for="photo-comment">Ý kiến</label><textarea id="photo-comment" rows="3" data-photo-field="comment"></textarea></div></div>
 <div class="bar"><button type="button" id="photo-print-current">In biên bản đang chọn kèm ảnh</button></div>
 <div id="photo-status" role="status" aria-live="polite"></div></div></details>
+<details id="drive-lib"><summary>5. Thư viện ảnh &amp; PDF (thư mục trên Google Drive)</summary><div class="in">
+<p style="color:var(--mu);font-size:12px;margin:0 0 8px">Tạo thư mục, tải ảnh/PDF từ máy lên (bấm nút hoặc kéo thả). Các tệp này dùng lại được ở mục 4 (chọn ảnh) và mục 6 (chèn PDF). Lưu trong Drive của chủ Web App, thư mục gốc “HoSoNghiemThu_TaiLieu”.</p>
+<div id="dl-host"></div></div></details>
+<details id="att-entry"><summary>6. Chèn file PDF vào biên bản (in kèm sau biên bản)</summary><div class="in">
+<div><label for="att-row">Biên bản cần gắn PDF</label><select id="att-row"></select></div>
+<div class="bar" style="margin:8px 0;align-items:center"><button type="button" id="att-drive">📁 Chọn PDF từ thư viện Drive</button><label class="dl-up">💻 Chọn PDF từ máy<input type="file" id="att-file" accept="application/pdf" multiple hidden></label></div>
+<small style="color:var(--mu)">PDF chọn từ máy sẽ được lưu vào thư mục Drive: <b class="dl-where">“Thư viện”</b> (đổi thư mục ở mục 5). Khi xuất PDF, tick “PDF đính kèm” để các trang PDF được chèn ngay sau biên bản tương ứng.</small>
+<div id="att-list" style="margin-top:8px"></div>
+<div id="att-status" role="status" aria-live="polite" style="color:var(--mu);font-size:12px;margin-top:6px"></div></div></details>
+
 <div class="bar">
 <div><label>Chọn số thứ tự (vd: 1-100 hoặc 1,3,5-8; để trống = tất cả)</label><input id="rng" placeholder="1-100"></div>
 <div><label>Loại biên bản</label>
@@ -256,7 +288,8 @@ table.gr{border-collapse:collapse;min-width:2000px}
 <label><input type="checkbox" class="ty" value="n" checked style="width:auto"> BBNT nội bộ</label>
 <label><input type="checkbox" class="ty" value="b" checked style="width:auto"> BBNT công việc</label>
 <label><input type="checkbox" class="ty" value="c" checked style="width:auto"> Checklist</label>
-<label><input type="checkbox" class="ty" value="p" style="width:auto"> Hình ảnh nghiệm thu</label></div>
+<label><input type="checkbox" class="ty" value="p" style="width:auto"> Hình ảnh nghiệm thu</label>
+<label><input type="checkbox" class="ty" value="f" checked style="width:auto"> PDF đính kèm</label></div>
 <div><label>Thứ tự in</label><select id="ord"><option value="r">Theo từng đợt (YCNT→NB→BBNT→Check của số 1, rồi số 2…)</option><option value="t">Theo loại (tất cả YCNT, rồi tất cả NB…)</option></select></div>
 <div><button id="snd">Gửi dữ liệu về Google</button> <button class="s" id="qrv">📋 Xem lại biên bản đã xong</button> <button id="pdf">Xuất PDF</button></div>
 <small style="color:var(--mu);flex-basis:100%">Bấm “Xuất PDF” → hộp thoại in → chọn “Lưu dưới dạng PDF”, khổ A4, lề “None”, tắt “Headers and footers”.</small>
@@ -616,7 +649,7 @@ if(!t)for(let i=0;i<n;i++)o.add(i);else t.split(/[,;\s]+/).forEach(p=>{const m=p
 return[...o].sort((a,b)=>a-b)}
 ui();
 
-const CFG0={url:'https://script.google.com/macros/s/AKfycbyF-c3zLrlnJ1dLJNeWZOizTy_XrULGv4u59Mt_nPTca5qVv0gaS7A34kk9jIoV-E-0/exec'}; /* điền sẵn URL Web App ở đây nếu đưa trang lên web cho cả team */
+const CFG0={url:'https://script.google.com/macros/s/AKfycbyQlHnWuaS5MTCezYLbu-ID9ibPnK4gvWwq5Z9t2VNn4tloVsWQ56kglSUe_Jy3VxjT/exec'}; /* điền sẵn URL Web App ở đây nếu đưa trang lên web cho cả team */
 const OLD_CFG_URL='https://script.google.com/macros/s/AKfycbx13YZZxkbggnueggZf7EtUpNyInAvTWKjy6i2xlAujfolrawzLkA4Wetn-d3TvwpIr/exec';
 let CF={};try{CF=JSON.parse(localStorage.getItem('hsnt_cfg'))||{}}catch(e){}if(CF.url===OLD_CFG_URL)CF.url=CFG0.url;CF=Object.assign({},CFG0,CF);
 var TK='',UID='',UNAME='',REV=0,FORCE=false;
@@ -639,7 +672,7 @@ if(!ix.length){st.textContent='Không có STT phù hợp.';$('pv').innerHTML='';
 if(full&&ty.includes('p')){
 const missing=ix.find(index=>photoReportFor(S.rows[index]).images.some(image=>!image));
 if(missing!=null){st.textContent=`Biên bản STT ${missing+1}: cần nhập đủ Ảnh 1, Ảnh 2, Ảnh 3 và Ảnh 4.`;$('photo-row').value=String(missing);cur=missing;photoEditorRender();$('pv').innerHTML='';return 0}}
-let h=[];if($('ord').value=='r')ix.forEach(i=>ty.forEach(t=>h.push(FN[t](S.rows[i],i))));else ty.forEach(t=>ix.forEach(i=>h.push(FN[t](S.rows[i],i))));
+let h=[];const pu=(t,i)=>{const x=FN[t](S.rows[i],i);Array.isArray(x)?h.push(...x):h.push(x)};if($('ord').value=='r')ix.forEach(i=>ty.forEach(t=>pu(t,i)));else ty.forEach(t=>ix.forEach(i=>pu(t,i)));
 const tot=h.length;if(!full&&tot>12)h=h.slice(0,12);
 $('pv').innerHTML=h.join('');ahf();if(!full)fit();
 st.textContent=`Xem trước STT ${ix.length>6?ix[0]+1+'…'+(ix[ix.length-1]+1):ix.map(i=>i+1).join(', ')} · ${h.length}/${tot} trang`+(!full&&blank?' (đang theo dòng bạn nhập; để trống ô số thứ tự thì xuất PDF in tất cả)':'');return h.length}
@@ -1481,4 +1514,191 @@ $('ai-input').addEventListener('keydown', e => {
     $('ai-btn').click();
   }
 });
-</script></body></html>
+</script>
+<script>
+/* ===== Thư viện tệp Google Drive + chèn PDF vào biên bản ===== */
+(function(){
+'use strict';
+const PDFJS_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/',MAXMB=18,MAXPG=60;
+const DL={cur:{id:'',name:'Thư viện'}},TH=new Map(),PDF_PAGES=new Map(),PDF_BUSY=new Map(),PDF_ERR=new Map();
+async function dcall(act,p){
+ const r=await fetch(CF.url.trim(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:act,token:TK},p))});
+ const j=await r.json();
+ if(!j.ok)throw new Error(j.error==='session'?'Phiên đăng nhập đã hết hạn, hãy đăng nhập lại.':(j.message||j.error||'Lỗi'));
+ return j}
+const b64=blob=>new Promise((ok,bad)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=()=>bad(new Error('Không đọc được tệp.'));r.readAsDataURL(blob)});
+function syncWhere(){document.querySelectorAll('.dl-where').forEach(x=>{x.textContent='“'+DL.cur.name+'”'})}
+async function prep(file){
+ if(file.type==='application/pdf'||/\.pdf$/i.test(file.name))return{name:file.name,mime:'application/pdf',blob:file};
+ if(!file.type.startsWith('image/'))throw new Error('Chỉ nhận ảnh hoặc PDF: '+file.name);
+ if(file.size<=1.5*1048576&&/jpe?g|png|webp/.test(file.type))return{name:file.name,mime:file.type,blob:file};
+ const bm=await createImageBitmap(file);
+ try{const sc=Math.min(1,2560/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*sc);c.height=Math.round(bm.height*sc);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));if(!blob)throw new Error('Không xử lý được ảnh '+file.name);
+  return{name:file.name.replace(/\.[^.]+$/,'')+'.jpg',mime:'image/jpeg',blob}}finally{bm.close()}}
+async function upload(file,folderId){
+ const p=await prep(file);if(p.blob.size>MAXMB*1048576)throw new Error('Tệp lớn hơn '+MAXMB+' MB.');
+ return (await dcall('drive_upload',{folderId:folderId||'',name:p.name,mime:p.mime,data:await b64(p.blob)})).file}
+async function getFile(m){
+ const j=await dcall('drive_get',{fileId:m.id}),bin=atob(j.data),u=new Uint8Array(bin.length);
+ for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+ return new File([u],j.name||m.name,{type:j.mime||m.mime})}
+
+function browser(host,opt){
+ const B={id:'',sel:new Map(),tok:0},G=()=>host.querySelector('.dl-grid'),msg=t=>{host.querySelector('.dl-msg').textContent=t||''};
+ const acc=opt.accept==='pdf'?'application/pdf':opt.accept==='image'?'image/*':'image/*,application/pdf';
+ host.classList.add('dl');
+ host.innerHTML=`<div class="dl-bar"><div class="dl-path"></div><button type="button" class="s" data-a="mk">📁 Tạo thư mục</button><label class="dl-up">⬆ Tải lên từ máy<input type="file" multiple accept="${acc}" hidden></label><button type="button" class="s" data-a="rf" title="Tải lại">↻</button></div><div class="dl-msg" role="status"></div><div class="dl-grid"></div>`;
+ B.msg=msg;
+ async function thumbs(list,tok){
+  const todo=list.filter(f=>!TH.has(f.id));let i=0;
+  const run=async()=>{while(i<todo.length){if(tok!==B.tok)return;const f=todo[i++];
+   try{const j=await dcall('drive_get',{fileId:f.id,thumb:1});if(j.data){const u=`data:${j.mime};base64,${j.data}`;TH.set(f.id,u);const el=host.querySelector(`[data-th="${CSS.escape(f.id)}"]`);if(el)el.innerHTML=`<img src="${u}" alt="">`}}catch(e){}}};
+  run();run()}
+ B.open=async function(id){
+  if(!TK){G().innerHTML='';msg('Hãy đăng nhập để dùng thư viện Drive.');return}
+  const tok=++B.tok;msg('Đang tải…');
+  try{
+   const j=await dcall('drive_list',{folderId:id||''});if(tok!==B.tok)return;
+   B.id=j.folderId;DL.cur={id:j.folderId,name:j.path[j.path.length-1].name};syncWhere();
+   host.querySelector('.dl-path').innerHTML=j.path.map((p,i)=>`<button type="button" data-a="go" data-id="${esc(p.id)}">${i?'':'🏠 '}${esc(p.name)}</button>`).join(' / ');
+   const rm=(f,d)=>opt.pick?'':`<button type="button" class="s dl-rm" data-a="rm" data-id="${esc(f.id)}" data-n="${esc(f.name)}" ${d?'data-d="1"':''} title="Xóa (chuyển vào thùng rác Drive)">🗑</button>`;
+   G().innerHTML=j.folders.map(f=>`<div class="dl-it" data-a="go" data-id="${esc(f.id)}"><div class="dl-th">📁</div><span title="${esc(f.name)}">${esc(f.name)}</span>${rm(f,1)}</div>`).join('')
+    +j.files.map(f=>`<div class="dl-it${B.sel.has(f.id)?' on':''}" data-a="pick" data-id="${esc(f.id)}" data-n="${esc(f.name)}" data-m="${esc(f.mime)}"><div class="dl-th" data-th="${esc(f.id)}">${TH.has(f.id)?`<img src="${TH.get(f.id)}" alt="">`:(f.mime==='application/pdf'?'📄':'🖼')}</div><span title="${esc(f.name)}">${esc(f.name)}</span>${rm(f,0)}</div>`).join('');
+   msg(j.folders.length||j.files.length?'':'Thư mục trống — bấm “Tải lên từ máy” hoặc kéo thả tệp vào đây.');
+   thumbs(j.files,tok)
+  }catch(e){if(id)return B.open('');if(tok===B.tok)msg('Lỗi: '+e.message)}};
+ B.upload=async function(files){
+  files=[...files];if(!files.length)return[];if(!TK){msg('Hãy đăng nhập trước.');return[]}
+  const out=[];
+  for(let i=0;i<files.length;i++){msg(`Đang tải lên ${i+1}/${files.length}: ${files[i].name}…`);
+   try{out.push(await upload(files[i],B.id))}catch(e){msg('Lỗi '+files[i].name+': '+e.message);break}}
+  if(out.length){await B.open(B.id);msg(`Đã tải lên ${out.length} tệp.`)}
+  return out};
+ host.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-a]');if(!t||!host.contains(t))return;const a=t.dataset.a;
+  if(a==='rm'){e.stopPropagation();if(!confirm(`Xóa ${t.dataset.d?'thư mục':'tệp'} “${t.dataset.n}”? (chuyển vào thùng rác Drive)`))return;
+   try{await dcall('drive_trash',{id:t.dataset.id});B.sel.delete(t.dataset.id);B.open(B.id)}catch(er){msg('Lỗi: '+er.message)}return}
+  if(a==='go')B.open(t.dataset.id);
+  else if(a==='rf')B.open(B.id);
+  else if(a==='mk'){const n=(prompt('Tên thư mục mới:')||'').trim();if(!n)return;
+   try{const j=await dcall('drive_mkdir',{parentId:B.id,name:n});B.open(j.id)}catch(er){msg('Lỗi: '+er.message)}}
+  else if(a==='pick'&&opt.pick){const id=t.dataset.id;
+   if(B.sel.has(id))B.sel.delete(id);else{if(!opt.multi)B.sel.clear();B.sel.set(id,{id,name:t.dataset.n,mime:t.dataset.m})}
+   host.querySelectorAll('[data-a=pick]').forEach(x=>x.classList.toggle('on',B.sel.has(x.dataset.id)));opt.onSel&&opt.onSel(B.sel.size)}});
+ host.querySelector('input[type=file]').addEventListener('change',e=>{B.upload(e.target.files);e.target.value=''});
+ host.addEventListener('dragover',e=>{e.preventDefault();host.classList.add('drag')});
+ host.addEventListener('dragleave',e=>{if(!host.contains(e.relatedTarget))host.classList.remove('drag')});
+ host.addEventListener('drop',e=>{e.preventDefault();host.classList.remove('drag');B.upload(e.dataTransfer.files)});
+ return B}
+
+let MO=null;
+function pick(opt){return new Promise(res=>{
+ if(!TK){alert('Hãy đăng nhập trước khi dùng thư viện Drive.');return res([])}
+ if(!MO){MO=document.createElement('dialog');MO.className='dl-modal np';document.body.appendChild(MO)}
+ MO.innerHTML=`<div class="dl-mh"><b>${esc(opt.title||'Chọn tệp')}</b><button type="button" class="s" data-x>✕</button></div><div class="dl-mb"></div><div class="dl-mf"><span class="dl-cnt">Bấm vào tệp để chọn${opt.multi?' (chọn được nhiều tệp)':''}.</span><button type="button" class="s" data-x>Hủy</button><button type="button" data-ok disabled>Chèn</button></div>`;
+ const ok=MO.querySelector('[data-ok]');let done=false;
+ const B=browser(MO.querySelector('.dl-mb'),{accept:opt.accept,pick:true,multi:!!opt.multi,onSel:n=>{ok.disabled=!n;MO.querySelector('.dl-cnt').textContent=n?`Đã chọn ${n} tệp.`:'Chưa chọn tệp nào.'}});
+ const fin=v=>{if(done)return;done=true;if(MO.open)MO.close();res(v)};
+ MO.onclick=e=>{if(e.target.closest('[data-x]'))fin([]);else if(e.target.closest('[data-ok]'))fin([...B.sel.values()])};
+ MO.onclose=()=>fin([]);MO.showModal();B.open(DL.cur.id)})}
+
+/* ---- PDF → ảnh trang để in kèm ---- */
+async function pdfLib(){
+ if(!window.pdfjsLib)await new Promise((ok,bad)=>{const s=document.createElement('script');s.src=PDFJS_URL+'pdf.min.js';s.onload=ok;s.onerror=()=>bad(new Error('Không tải được bộ đọc PDF (cần Internet).'));document.head.appendChild(s)});
+ if(!pdfjsLib.GlobalWorkerOptions.workerSrc){const w=await(await fetch(PDFJS_URL+'pdf.worker.min.js')).text();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([w],{type:'text/javascript'}))}
+ return pdfjsLib}
+async function renderPdf(id){
+ const j=await dcall('drive_get',{fileId:id}),bin=atob(j.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+ const lib=await pdfLib(),doc=await lib.getDocument({data:u}).promise,out=[],n=Math.min(doc.numPages,MAXPG);
+ for(let k=1;k<=n;k++){const pg=await doc.getPage(k),v0=pg.getViewport({scale:1}),v=pg.getViewport({scale:Math.min(1240/v0.width,1754/v0.height)}),c=document.createElement('canvas');
+  c.width=Math.ceil(v.width);c.height=Math.ceil(v.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+  await pg.render({canvasContext:x,viewport:v}).promise;out.push(c.toDataURL('image/jpeg',.85));c.width=c.height=0}
+ return out}
+function loadPdf(id){
+ if(PDF_PAGES.has(id))return Promise.resolve(PDF_PAGES.get(id));
+ if(PDF_BUSY.has(id))return PDF_BUSY.get(id);
+ const p=renderPdf(id).then(v=>{PDF_PAGES.set(id,v);PDF_BUSY.delete(id);attRender();ap();return v},e=>{PDF_BUSY.delete(id);PDF_ERR.set(id,e.message);ap();throw e});
+ PDF_BUSY.set(id,p);return p}
+FN.f=function(r){
+ const out=[];(photoReportFor(r).pdfs||[]).forEach(a=>{
+  const pg=PDF_PAGES.get(a.id);
+  if(pg)pg.forEach(src=>out.push(`<div class="pg fx pdf-pg"><img src="${src}" alt=""></div>`));
+  else if(PDF_ERR.has(a.id))out.push(`<div class="pg fx pdf-pg"><div class="pdf-wait">Không đọc được PDF “${esc(a.name)}”: ${esc(PDF_ERR.get(a.id))}</div></div>`);
+  else{out.push(`<div class="pg fx pdf-pg"><div class="pdf-wait">Đang tải PDF “${esc(a.name)}”…</div></div>`);loadPdf(a.id).catch(()=>{})}});
+ return out};
+function needIds(rows){
+ if(!document.querySelector('.ty[value="f"]:checked'))return[];
+ const ids=new Set();rows.forEach(i=>{const r=S.rows[i];r&&(photoReportFor(r).pdfs||[]).forEach(a=>{if(!PDF_PAGES.has(a.id)&&!PDF_ERR.has(a.id))ids.add(a.id)})});return[...ids]}
+function guardPrint(el,rows){el.addEventListener('click',async e=>{
+ if(el._go){el._go=0;return}
+ const ids=needIds(rows());if(!ids.length)return;
+ e.stopImmediatePropagation();e.preventDefault();
+ const st=$('pv-status');st.textContent=`Đang chuẩn bị ${ids.length} file PDF đính kèm…`;
+ try{await Promise.all(ids.map(loadPdf))}catch(er){st.textContent='Không tải được PDF đính kèm: '+er.message}
+ el._go=1;el.click()},true)}
+guardPrint($('pdf'),()=>sel());
+guardPrint($('photo-print-current'),()=>[Math.max(0,Number($('photo-row').value)||0)]);
+
+/* ---- Mục 6: gắn PDF vào biên bản ---- */
+function attRender(){
+ const s=$('att-row');if(!s)return;
+ if(!S.rows.length){s.innerHTML='<option value="">Chưa có biên bản</option>';$('att-list').innerHTML='';return}
+ s.innerHTML=S.rows.map((r,i)=>`<option value="${i}">STT ${i+1} · ${esc(r.ma||r.ten||'Biên bản')} · ${esc(r.hm||'')} · ${esc(r.vt||'')}</option>`).join('');
+ const i=Math.max(0,Math.min(Number(cur)||0,S.rows.length-1));s.value=String(i);
+ const L=photoReportFor(S.rows[i]).pdfs||[];
+ $('att-list').innerHTML=L.length?L.map((a,k)=>`<div class="att-it"><span>📄 ${esc(a.name)}${PDF_PAGES.has(a.id)?' · '+PDF_PAGES.get(a.id).length+' trang':''}${PDF_ERR.has(a.id)?' · <b style="color:#c00">lỗi: '+esc(PDF_ERR.get(a.id))+'</b>':''}</span><button type="button" class="s" data-att-del="${k}">Gỡ khỏi biên bản</button></div>`).join(''):'<div style="color:var(--mu)">Chưa có PDF nào gắn với biên bản này.</div>'}
+function attach(metas){
+ const row=S.rows[cur];if(!row||!metas.length)return;
+ const rep=photoReportFor(row);if(!Array.isArray(rep.pdfs))rep.pdfs=[];let n=0;
+ metas.forEach(m=>{if(!rep.pdfs.some(x=>x.id===m.id)){rep.pdfs.push({id:m.id,name:m.name});PDF_ERR.delete(m.id);n++}});
+ savePhotoReport(row);document.querySelector('.ty[value="f"]').checked=true;
+ $('att-status').textContent=`Đã gắn ${n} PDF vào biên bản STT ${cur+1}.`;
+ attRender();rep.pdfs.forEach(a=>loadPdf(a.id).catch(()=>{}));ap()}
+$('att-row').addEventListener('change',e=>{cur=Number(e.target.value)||0;photoEditorRender();ap()});
+$('att-drive').addEventListener('click',async()=>{attach(await pick({accept:'pdf',multi:true,title:'Chọn file PDF để chèn vào biên bản'}))});
+$('att-file').addEventListener('change',async e=>{
+ const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
+ if(!TK){$('att-status').textContent='Hãy đăng nhập để lưu PDF vào Drive.';return}
+ const out=[];
+ for(const f of fs){try{$('att-status').textContent=`Đang tải lên “${f.name}”…`;out.push(await upload(f,DL.cur.id))}catch(er){$('att-status').textContent='Lỗi '+f.name+': '+er.message;break}}
+ attach(out)});
+$('att-list').addEventListener('click',e=>{
+ const b=e.target.closest('[data-att-del]');if(!b)return;const row=S.rows[cur];if(!row)return;
+ photoReportFor(row).pdfs.splice(Number(b.dataset.attDel),1);savePhotoReport(row);attRender();ap();$('att-status').textContent='Đã gỡ PDF khỏi biên bản (tệp vẫn còn trong thư viện).'});
+
+/* ---- Mục 4: chọn ảnh từ Drive / lưu bản sao lên Drive ---- */
+document.querySelectorAll('#photo-entry .photo-upload').forEach(box=>{
+ const i=box.querySelector('[data-photo-image]').dataset.photoImage;
+ box.querySelector('.photo-thumb').insertAdjacentHTML('beforebegin',`<button class="s" type="button" data-photo-drive="${i}" style="grid-column:1/-1">📁 Chọn ảnh từ thư viện Drive</button>`)});
+$('photo-status').insertAdjacentHTML('beforebegin','<label style="margin:6px 0;display:block"><input type="checkbox" id="photo-save-drive" style="width:auto"> Ảnh chọn từ máy: đồng thời lưu bản sao vào thư mục Drive <b class="dl-where">“Thư viện”</b> <small id="photo-drive-msg" style="color:var(--mu)"></small></label>');
+async function setPhoto(row,idx,file){
+ const rep=photoReportFor(row),prev=rep.images[idx];rep.images[idx]=await compressPhoto(file);
+ if(!savePhotoReport(row)){rep.images[idx]=prev;throw new Error(photoStoreError)}}
+$('photo-entry').addEventListener('click',async e=>{
+ const b=e.target.closest('[data-photo-drive]');if(!b)return;
+ const idx=Number(b.dataset.photoDrive),row=S.rows[cur],st=$('photo-status');
+ if(!row){st.textContent='Chưa chọn biên bản.';return}
+ const files=await pick({accept:'image',multi:true,title:`Chọn ảnh cho Ảnh ${idx+1} (chọn nhiều ảnh để điền luôn các ô còn trống)`});if(!files.length)return;
+ const rep=photoReportFor(row),slots=[idx].concat([0,1,2,3].filter(k=>k!==idx&&!rep.images[k]));let n=0;
+ for(let k=0;k<files.length&&k<slots.length;k++){
+  try{st.textContent=`Đang lấy ảnh “${files[k].name}” từ Drive…`;await setPhoto(row,slots[k],await getFile(files[k]));n++}
+  catch(er){st.textContent='Không thể chèn ảnh: '+er.message;break}}
+ if(n){document.querySelector('.ty[value="p"]').checked=true;photoEditorRender();ap();
+  st.textContent=`Đã chèn ${n} ảnh từ Drive vào biên bản STT ${S.rows.indexOf(row)+1}.`+(files.length>slots.length?` ${files.length-slots.length} ảnh chưa chèn vì hết ô trống.`:'')}});
+$('photo-entry').addEventListener('change',async e=>{
+ const i=e.target;if(!i.matches('[data-photo-image]')||!$('photo-save-drive').checked)return;
+ const f=i.files&&i.files[0];if(!f)return;const m=$('photo-drive-msg');
+ if(!TK){m.textContent='— chưa đăng nhập nên không lưu được lên Drive';return}
+ try{m.textContent='— đang lưu lên Drive…';await upload(f,DL.cur.id);m.textContent='— đã lưu bản sao lên Drive.';if(MB.id===DL.cur.id)MB.open(MB.id)}
+ catch(er){m.textContent='— lỗi lưu Drive: '+er.message}});
+
+/* ---- Mục 5: trình duyệt thư viện ---- */
+const MB=browser($('dl-host'),{});
+$('drive-lib').addEventListener('toggle',()=>{if($('drive-lib').open)MB.open(MB.id||DL.cur.id)});
+
+const _per=photoEditorRender;photoEditorRender=function(){_per.apply(this,arguments);try{attRender()}catch(e){}};
+attRender();
+})();
+</script>
+</body></html>
