@@ -182,6 +182,7 @@ table.gr{border-collapse:collapse;min-width:2000px}
 .att-it{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;margin:4px 0;background:var(--bg)}
 .pg.pdf-pg{padding:0!important;display:flex!important;align-items:center;justify-content:center}
 .pdf-pg img{width:100%;height:100%;object-fit:contain}.pdf-wait{color:#555;font:14px sans-serif;padding:20px;text-align:center}
+.dl-tb{width:100%;border-collapse:collapse;font-size:13px}.dl-tb th,.dl-tb td{border:1px solid var(--bd);padding:6px 8px;text-align:left}.dl-tb th{background:var(--ac2);white-space:nowrap}.dl-tb tr[data-a=go]{cursor:pointer}.dl-tb td:last-child{white-space:nowrap;text-align:right}.dl-tb button{padding:3px 8px;margin-left:4px}.dl-gd{color:var(--ac);font-size:13px}
 </style></head><body><div id="lg" class="np"><div class="box"><h1>Đăng nhập</h1><p class="sub">Dữ liệu hồ sơ của bạn được tải về sau khi đăng nhập.</p>
 <div><label>URL Web App (Apps Script)</label><input id="lu" autocomplete="off"></div>
 <div style="margin-top:8px"><label>ID người dùng</label><input id="li" autocomplete="username"></div>
@@ -207,6 +208,9 @@ table.gr{border-collapse:collapse;min-width:2000px}
   </div>
 </details>
     <!-- ===================================== -->
+<details open id="drive-lib"><summary>📤 Up dữ liệu — kho lưu trữ biên bản nghiệm thu (đồng bộ với Google Drive)</summary><div class="in">
+<p style="color:var(--mu);font-size:12px;margin:0 0 8px">Nghiệm thu xong, tạo thư mục (ví dụ theo ngày / tháp / tầng) rồi up biên bản đã ký, ảnh, PDF, Word, Excel… lên đây. Tệp hiện ngay tại đây và nằm trong thư mục “HoSoNghiemThu_TaiLieu” trên Google Drive. Mỗi tệp tối đa 18 MB.</p>
+<div id="dl-host"></div></div></details>
 <details open id="qf"><summary>0. Phiếu nghiệm thu (chọn vị trí → thông tin hồ sơ → nhập số lượng theo bảng)</summary><div class="in">
 <div class="g">
 <div><label>Tháp</label><select id="qt"></select></div>
@@ -271,13 +275,10 @@ table.gr{border-collapse:collapse;min-width:2000px}
 <div style="grid-column:1/-1"><label for="photo-comment">Ý kiến</label><textarea id="photo-comment" rows="3" data-photo-field="comment"></textarea></div></div>
 <div class="bar"><button type="button" id="photo-print-current">In biên bản đang chọn kèm ảnh</button></div>
 <div id="photo-status" role="status" aria-live="polite"></div></div></details>
-<details id="drive-lib"><summary>5. Thư viện ảnh &amp; PDF (thư mục trên Google Drive)</summary><div class="in">
-<p style="color:var(--mu);font-size:12px;margin:0 0 8px">Tạo thư mục, tải ảnh/PDF từ máy lên (bấm nút hoặc kéo thả). Các tệp này dùng lại được ở mục 4 (chọn ảnh) và mục 6 (chèn PDF). Lưu trong Drive của chủ Web App, thư mục gốc “HoSoNghiemThu_TaiLieu”.</p>
-<div id="dl-host"></div></div></details>
-<details id="att-entry"><summary>6. Chèn file PDF vào biên bản (in kèm sau biên bản)</summary><div class="in">
+<details id="att-entry"><summary>5. Chèn file PDF vào biên bản (in kèm sau biên bản)</summary><div class="in">
 <div><label for="att-row">Biên bản cần gắn PDF</label><select id="att-row"></select></div>
-<div class="bar" style="margin:8px 0;align-items:center"><button type="button" id="att-drive">📁 Chọn PDF từ thư viện Drive</button><label class="dl-up">💻 Chọn PDF từ máy<input type="file" id="att-file" accept="application/pdf" multiple hidden></label></div>
-<small style="color:var(--mu)">PDF chọn từ máy sẽ được lưu vào thư mục Drive: <b class="dl-where">“Thư viện”</b> (đổi thư mục ở mục 5). Khi xuất PDF, tick “PDF đính kèm” để các trang PDF được chèn ngay sau biên bản tương ứng.</small>
+<div class="bar" style="margin:8px 0;align-items:center"><button type="button" id="att-drive">📁 Chọn PDF từ kho “Up dữ liệu”</button><label class="dl-up">💻 Chọn PDF từ máy<input type="file" id="att-file" accept="application/pdf" multiple hidden></label></div>
+<small style="color:var(--mu)">PDF chọn từ máy sẽ được lưu vào thư mục đang mở trong mục “Up dữ liệu”: <b class="dl-where">“Thư viện”</b>. Khi xuất PDF, tick “PDF đính kèm” để các trang PDF chèn ngay sau biên bản tương ứng.</small>
 <div id="att-list" style="margin-top:8px"></div>
 <div id="att-status" role="status" aria-live="polite" style="color:var(--mu);font-size:12px;margin-top:6px"></div></div></details>
 
@@ -1529,13 +1530,13 @@ async function dcall(act,p){
 const b64=blob=>new Promise((ok,bad)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=()=>bad(new Error('Không đọc được tệp.'));r.readAsDataURL(blob)});
 function syncWhere(){document.querySelectorAll('.dl-where').forEach(x=>{x.textContent='“'+DL.cur.name+'”'})}
 async function prep(file){
- if(file.type==='application/pdf'||/\.pdf$/i.test(file.name))return{name:file.name,mime:'application/pdf',blob:file};
- if(!file.type.startsWith('image/'))throw new Error('Chỉ nhận ảnh hoặc PDF: '+file.name);
- if(file.size<=1.5*1048576&&/jpe?g|png|webp/.test(file.type))return{name:file.name,mime:file.type,blob:file};
- const bm=await createImageBitmap(file);
- try{const sc=Math.min(1,2560/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*sc);c.height=Math.round(bm.height*sc);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
-  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));if(!blob)throw new Error('Không xử lý được ảnh '+file.name);
-  return{name:file.name.replace(/\.[^.]+$/,'')+'.jpg',mime:'image/jpeg',blob}}finally{bm.close()}}
+ if(/\.(exe|bat|cmd|msi|scr|js|vbs|ps1|jar|com)$/i.test(file.name))throw new Error('Không nhận tệp chương trình: '+file.name);
+ const raw={name:file.name,mime:file.type||'application/octet-stream',blob:file};
+ if(!file.type.startsWith('image/')||(file.size<=1.5*1048576&&/jpe?g|png|webp/.test(file.type)))return raw;
+ try{const bm=await createImageBitmap(file);
+  try{const sc=Math.min(1,2560/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*sc);c.height=Math.round(bm.height*sc);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
+   const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));if(!blob)return raw;
+   return{name:file.name.replace(/\.[^.]+$/,'')+'.jpg',mime:'image/jpeg',blob}}finally{bm.close()}}catch(e){return raw}}
 async function upload(file,folderId){
  const p=await prep(file);if(p.blob.size>MAXMB*1048576)throw new Error('Tệp lớn hơn '+MAXMB+' MB.');
  return (await dcall('drive_upload',{folderId:folderId||'',name:p.name,mime:p.mime,data:await b64(p.blob)})).file}
@@ -1546,9 +1547,10 @@ async function getFile(m){
 
 function browser(host,opt){
  const B={id:'',sel:new Map(),tok:0},G=()=>host.querySelector('.dl-grid'),msg=t=>{host.querySelector('.dl-msg').textContent=t||''};
- const acc=opt.accept==='pdf'?'application/pdf':opt.accept==='image'?'image/*':'image/*,application/pdf';
+ const acc=opt.accept==='pdf'?'application/pdf':opt.accept==='image'?'image/*':'';
+ const fico=m=>m==='application/pdf'?'📄':m.startsWith('image/')?'🖼':/word/.test(m)?'📝':/sheet|excel/.test(m)?'📊':'📎',fsz=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB',fdt=t=>new Date(t).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
  host.classList.add('dl');
- host.innerHTML=`<div class="dl-bar"><div class="dl-path"></div><button type="button" class="s" data-a="mk">📁 Tạo thư mục</button><label class="dl-up">⬆ Tải lên từ máy<input type="file" multiple accept="${acc}" hidden></label><button type="button" class="s" data-a="rf" title="Tải lại">↻</button></div><div class="dl-msg" role="status"></div><div class="dl-grid"></div>`;
+ host.innerHTML=`<div class="dl-bar"><div class="dl-path"></div><button type="button" class="s" data-a="mk">📁 Tạo thư mục</button><label class="dl-up">⬆ Up dữ liệu từ máy<input type="file" multiple ${acc?`accept="${acc}"`:''} hidden></label><button type="button" class="s" data-a="rf" title="Tải lại">↻</button>${opt.pick?'':'<input class="dl-q" placeholder="🔍 Tìm theo tên…" style="max-width:180px"><a class="dl-gd" target="_blank" rel="noopener" hidden>↗ Mở trên Google Drive</a>'}</div><div class="dl-msg" role="status"></div><div class="dl-grid"></div>`;
  B.msg=msg;
  async function thumbs(list,tok){
   const todo=list.filter(f=>!TH.has(f.id));let i=0;
@@ -1562,11 +1564,18 @@ function browser(host,opt){
    const j=await dcall('drive_list',{folderId:id||''});if(tok!==B.tok)return;
    B.id=j.folderId;DL.cur={id:j.folderId,name:j.path[j.path.length-1].name};syncWhere();
    host.querySelector('.dl-path').innerHTML=j.path.map((p,i)=>`<button type="button" data-a="go" data-id="${esc(p.id)}">${i?'':'🏠 '}${esc(p.name)}</button>`).join(' / ');
-   const rm=(f,d)=>opt.pick?'':`<button type="button" class="s dl-rm" data-a="rm" data-id="${esc(f.id)}" data-n="${esc(f.name)}" ${d?'data-d="1"':''} title="Xóa (chuyển vào thùng rác Drive)">🗑</button>`;
-   G().innerHTML=j.folders.map(f=>`<div class="dl-it" data-a="go" data-id="${esc(f.id)}"><div class="dl-th">📁</div><span title="${esc(f.name)}">${esc(f.name)}</span>${rm(f,1)}</div>`).join('')
-    +j.files.map(f=>`<div class="dl-it${B.sel.has(f.id)?' on':''}" data-a="pick" data-id="${esc(f.id)}" data-n="${esc(f.name)}" data-m="${esc(f.mime)}"><div class="dl-th" data-th="${esc(f.id)}">${TH.has(f.id)?`<img src="${TH.get(f.id)}" alt="">`:(f.mime==='application/pdf'?'📄':'🖼')}</div><span title="${esc(f.name)}">${esc(f.name)}</span>${rm(f,0)}</div>`).join('');
-   msg(j.folders.length||j.files.length?'':'Thư mục trống — bấm “Tải lên từ máy” hoặc kéo thả tệp vào đây.');
-   thumbs(j.files,tok)
+   const fl=!opt.pick?j.files:j.files.filter(f=>opt.accept==='pdf'?f.mime==='application/pdf':opt.accept==='image'?f.mime.startsWith('image/'):true);
+   const gd=host.querySelector('.dl-gd');if(gd&&j.url){gd.href=j.url;gd.hidden=false}
+   if(opt.pick)G().innerHTML=j.folders.map(f=>`<div class="dl-it" data-a="go" data-id="${esc(f.id)}"><div class="dl-th">📁</div><span title="${esc(f.name)}">${esc(f.name)}</span></div>`).join('')
+    +fl.map(f=>`<div class="dl-it${B.sel.has(f.id)?' on':''}" data-a="pick" data-id="${esc(f.id)}" data-n="${esc(f.name)}" data-m="${esc(f.mime)}"><div class="dl-th" data-th="${esc(f.id)}">${TH.has(f.id)?`<img src="${TH.get(f.id)}" alt="">`:fico(f.mime)}</div><span title="${esc(f.name)}">${esc(f.name)}</span></div>`).join('');
+   else{
+    const rb=(f,d)=>`<button type="button" class="s" data-a="rm" data-id="${esc(f.id)}" data-n="${esc(f.name)}" ${d?'data-d="1"':''} title="Xóa (chuyển vào thùng rác Drive)">🗑</button>`;
+    G().innerHTML=`<div class="tw" style="max-height:60vh"><table class="dl-tb"><thead><tr><th>Tên</th><th>Dung lượng</th><th>Người up</th><th>Ngày up</th><th></th></tr></thead><tbody>`
+     +j.folders.map(f=>`<tr data-a="go" data-id="${esc(f.id)}" data-name="${esc(f.name.toLowerCase())}"><td>📁 <b>${esc(f.name)}</b></td><td></td><td></td><td></td><td>${rb(f,1)}</td></tr>`).join('')
+     +fl.map(f=>`<tr data-name="${esc(f.name.toLowerCase())}"><td>${fico(f.mime)} ${esc(f.name)}</td><td>${fsz(f.size)}</td><td>${esc(f.by||'')}</td><td>${fdt(f.at)}</td><td>${(f.mime==='application/pdf'||f.mime.startsWith('image/'))?`<button type="button" class="s" data-a="view" data-id="${esc(f.id)}" data-n="${esc(f.name)}" data-m="${esc(f.mime)}">Xem</button>`:''}<button type="button" class="s" data-a="dl" data-id="${esc(f.id)}" data-n="${esc(f.name)}" data-m="${esc(f.mime)}">Tải về</button>${rb(f,0)}</td></tr>`).join('')
+     +`</tbody></table></div>`}
+   msg(j.folders.length||fl.length?'':'Thư mục trống — bấm “Up dữ liệu từ máy” hoặc kéo thả tệp vào đây.');
+   if(opt.pick)thumbs(fl,tok)
   }catch(e){if(id)return B.open('');if(tok===B.tok)msg('Lỗi: '+e.message)}};
  B.upload=async function(files){
   files=[...files];if(!files.length)return[];if(!TK){msg('Hãy đăng nhập trước.');return[]}
@@ -1581,12 +1590,18 @@ function browser(host,opt){
    try{await dcall('drive_trash',{id:t.dataset.id});B.sel.delete(t.dataset.id);B.open(B.id)}catch(er){msg('Lỗi: '+er.message)}return}
   if(a==='go')B.open(t.dataset.id);
   else if(a==='rf')B.open(B.id);
+  else if(a==='dl'||a==='view'){e.stopPropagation();msg('Đang lấy tệp…');
+   try{const f=await getFile({id:t.dataset.id,name:t.dataset.n,mime:t.dataset.m}),url=URL.createObjectURL(f);
+    if(a==='view'&&window.open(url,'_blank')){}else{const l=document.createElement('a');l.href=url;l.download=f.name;l.click()}
+    msg('');setTimeout(()=>URL.revokeObjectURL(url),120000)}catch(er){msg('Lỗi: '+er.message)}}
   else if(a==='mk'){const n=(prompt('Tên thư mục mới:')||'').trim();if(!n)return;
    try{const j=await dcall('drive_mkdir',{parentId:B.id,name:n});B.open(j.id)}catch(er){msg('Lỗi: '+er.message)}}
   else if(a==='pick'&&opt.pick){const id=t.dataset.id;
    if(B.sel.has(id))B.sel.delete(id);else{if(!opt.multi)B.sel.clear();B.sel.set(id,{id,name:t.dataset.n,mime:t.dataset.m})}
    host.querySelectorAll('[data-a=pick]').forEach(x=>x.classList.toggle('on',B.sel.has(x.dataset.id)));opt.onSel&&opt.onSel(B.sel.size)}});
  host.querySelector('input[type=file]').addEventListener('change',e=>{B.upload(e.target.files);e.target.value=''});
+ const q=host.querySelector('.dl-q');if(q)q.addEventListener('input',()=>{const k=q.value.trim().toLowerCase();host.querySelectorAll('tr[data-name]').forEach(r=>{r.hidden=!!k&&!r.dataset.name.includes(k)})});
+ if(!opt.pick)G().style.display='block';
  host.addEventListener('dragover',e=>{e.preventDefault();host.classList.add('drag')});
  host.addEventListener('dragleave',e=>{if(!host.contains(e.relatedTarget))host.classList.remove('drag')});
  host.addEventListener('drop',e=>{e.preventDefault();host.classList.remove('drag');B.upload(e.dataTransfer.files)});
@@ -1695,7 +1710,8 @@ $('photo-entry').addEventListener('change',async e=>{
 
 /* ---- Mục 5: trình duyệt thư viện ---- */
 const MB=browser($('dl-host'),{});
-$('drive-lib').addEventListener('toggle',()=>{if($('drive-lib').open)MB.open(MB.id||DL.cur.id)});
+$('drive-lib').addEventListener('toggle',()=>{if($('drive-lib').open&&TK)MB.open(MB.id||DL.cur.id)});
+const mbT=setInterval(()=>{if(TK){clearInterval(mbT);MB.open('')}},800);
 
 const _per=photoEditorRender;photoEditorRender=function(){_per.apply(this,arguments);try{attRender()}catch(e){}};
 attRender();
