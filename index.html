@@ -241,7 +241,7 @@ table.gr{border-collapse:collapse;min-width:2000px}
 <small style="color:var(--mu)">Bảng = sheet luy_ke_vk_phong_tam: tổng hợp cộng dồn theo mã vách kính / tầng, không phân biệt căn hộ. Số liệu lũy kế chỉ được quản lý ở backend.</small></div>
 <div id="lkkd" style="display:none"><div id="kdlsum" class="lk-sum"></div>
 <div class="tw"><table class="gr"><thead><tr><th rowspan="2">Tháp</th><th rowspan="2">Tầng</th><th rowspan="2">Vách khối đế</th><th rowspan="2">Rộng<br>(mm)</th><th rowspan="2">Cao<br>(mm)</th><th rowspan="2">SL tổng<br>(bộ)</th><th colspan="2" class="lk-green">Lũy kế nghiệm thu</th><th colspan="2" class="lk-orange">Còn lại</th></tr><tr><th class="lk-green">Khung phụ</th><th class="lk-green">Khung chính</th><th class="lk-orange">Khung phụ</th><th class="lk-orange">Khung chính</th></tr></thead><tbody id="kdlbody"></tbody></table></div>
-<small style="color:var(--mu)">Bảng = sheet luy_ke_khoi_de. Danh mục vách khối đế và SL tổng nhập trực tiếp ở sheet (backend); lũy kế tự cập nhật khi gửi nghiệm thu Vách khối đế.</small></div>
+<small style="color:var(--mu)">Bảng = sheet luy_ke_khoi_de. Danh mục vách khối đế, cột Tầng (vd 4 hoặc 4,5,6) và SL tổng nhập trực tiếp ở sheet (backend); chọn tầng nào thì hiện các vách có tầng đó; lũy kế tự cập nhật khi gửi nghiệm thu Vách khối đế.</small></div>
 </div></details>
 <details><summary>1. Thông tin chung (dùng cho mọi biên bản)</summary><div class="in"><div class="g" id="gl"></div></div></details>
 <details><summary>2. Checklist mẫu (sửa nội dung nếu cần)</summary><div class="in"><div class="g">
@@ -807,12 +807,12 @@ let QI={},qTenT=false;
 function qfInfoRender(){$('qinfo').innerHTML='<div><label>Tên công việc</label><input id="qten"></div>'+QF.map(f=>`<div><label>${f[1]}</label>${f[0]=='ck'?ckSelect(QI.ck,'data-qi="ck"'):`<input ${f[2]?'type="date"':''} data-qi="${f[0]}" value="${esc(QI[f[0]]||'')}">`}</div>`).join('');$('qten').value=qTenT?($('qten').dataset.v||''):''}
 function qfInfoLoad(){const l=S.rows[S.rows.length-1],d=nr();QI={};QF.forEach(f=>QI[f[0]]=l?(f[0]=='so'?'':(l[f[0]]||'')):d[f[0]]);qTenT=false;qfInfoRender()}
 function qfAuto(){const th=$('qt').value,tg=$('qg').value,hm=$('qh').value,cn=qfCn();
-const ex=th==KD_T?'':($('qgx').value||'').trim();$('qauto').innerHTML='Tự điền vào bảng → Hạng mục: <b>'+esc(hm)+'</b> · Vị trí: <b>'+esc(th==KD_T?KD_T:tg+'-'+th+(cn?' - '+cn:''))+'</b>'+(ex?' · Gộp thêm tầng: <b>'+esc(ex)+'</b> (1 biên bản)':'')}
+const ex=th==KD_T?'':($('qgx').value||'').trim();$('qauto').innerHTML='Tự điền vào bảng → Hạng mục: <b>'+esc(hm)+'</b> · Vị trí: <b>'+esc(th==KD_T?(tg===KD_F?KD_T:KD_T+' - '+tg):tg+'-'+th+(cn?' - '+cn:''))+'</b>'+(ex?' · Gộp thêm tầng: <b>'+esc(ex)+'</b> (1 biên bản)':'')}
 $('qgx').addEventListener('input',qfAuto);
 function qfInit(){if(!$('qinfo').children.length){QI={};QF.forEach(f=>QI[f[0]]=nr()[f[0]]);qfInfoRender()}
 document.querySelectorAll('[data-c]').forEach(t=>{t.value=cat()[t.dataset.c]});
 qfOpt('qt',['A','B1','B2'].filter(k=>DATA[k]).map(k=>'Tháp '+k).concat([KD_T]));qfTang()}
-function qfTang(){$('qgxw').hidden=qfKD();if(qfKD())qfOpt('qg',[KD_F]);else{const k=qfK(),f={};Object.keys(DATA[k]||{}).concat(Object.keys(VK[k]||{})).forEach(x=>f[x]=1);qfOpt('qg',Object.keys(f).map(Number).sort((a,b)=>a-b).map(n=>'Tầng '+n))}qfHM()}
+function qfTang(){$('qgxw').hidden=qfKD();if(qfKD())qfOpt('qg',kdFloorOpts());else{const k=qfK(),f={};Object.keys(DATA[k]||{}).concat(Object.keys(VK[k]||{})).forEach(x=>f[x]=1);qfOpt('qg',Object.keys(f).map(Number).sort((a,b)=>a-b).map(n=>'Tầng '+n))}qfHM()}
 function qfHM(){qfOpt('qh',nghL().map(h=>h.n).filter(n=>qfKD()?n==HM_KD:n!=HM_KD));qfLoai()}
 function qfLoai(){const h=nghL().filter(x=>x.n==$('qh').value)[0];qfOpt('ql',h?h.t:[]);qfCan()}
 function qfCan(){$('qnw').hidden=true;qfItems()}
@@ -868,11 +868,17 @@ function lkScheduleRefresh(){clearTimeout(lkTimer);if(!ready||!TK)return;$('lkst
 function lkStart(){clearTimeout(lkTimer);lkTimer=0;if(!ready||!TK)return;lkXStart();const seq=++lkSyncSeq;$('lkstat').textContent='· Đang đồng bộ…';
 call('luyke_sync',{items:lkSeedRows()}).then(j=>{if(seq===lkSyncSeq)lkApply(j.rows)}).catch(e=>{if(seq!==lkSyncSeq)return;if(e&&e.code==='session'){showLogin('Phiên đăng nhập hết hạn, hãy đăng nhập lại.');return}$('lkstat').textContent='· Lỗi đồng bộ: '+em(e)})}
 /* ===== Bảng lũy kế theo Hạng mục đang chọn: Nhôm kính (luy_ke) / Lan can (luy_ke_lan_can) / Vách kính phòng tắm (luy_ke_vk_phong_tam) / Vách khối đế (luy_ke_khoi_de) ===== */
+const kdFl=t=>{const s=String(t==null?'':t).trim();if(!s||/toàn|tất cả|tat ca/i.test(s))return null;const set=new Set();s.replace(/tầng/ig,'').split(/[,;\/.]+|\bvà\b/i).forEach(p=>{p=p.trim();const m=p.match(/^(\d+)\s*[-–—]\s*(\d+)$/);if(m){for(let i=+m[1];i<=+m[2]&&i<200;i++)set.add(i)}else if(/^\d+$/.test(p))set.add(+p)});return set.size?[...set]:null};
+const kdFloorList=()=>{const s=new Set();(LKX.kd||[]).forEach(r=>(kdFl(r.tang)||[]).forEach(x=>s.add(x)));return[...s].sort((a,b)=>a-b)};
+const kdRowsAt=fl=>{const A=LKX.kd||[],n=/\d/.test(fl||'')?kdFl(fl):null;return n?A.filter(r=>{const f=kdFl(r.tang);return !f||f.some(x=>n.includes(x))}):A};
+const kdFloorOpts=()=>[KD_F].concat(kdFloorList().map(n=>'Tầng '+n));
+let kdSig='';
+function kdSync(){const sg=JSON.stringify((LKX.kd||[]).map(r=>[r.tang,r.ten,r.sl,r.rong,r.cao]));if(sg===kdSig)return;kdSig=sg;if(!qfKD())return;qfOpt('qg',kdFloorOpts());if(![...document.querySelectorAll('#qk [data-qd]')].some(i=>i.value.trim()))qfItems()}
 const lkXKind=()=>{const e=$('qh'),v=e?e.value:'';return v===HM_LC?'lc':v===HM_VK?'vk':v===HM_KD?'kd':''};
 function lkXSeed(k){if(k==='kd')return[];if(lkXSeedC[k])return lkXSeedC[k];const D=k==='lc'?LCD:VKS,a=[];
 Object.keys(D).forEach(t=>Object.keys(D[t]).forEach(f=>D[t][f].forEach(r=>a.push({thap:t,tang:'Tầng '+(+f<10?'0'+f:+f),ten:r[0],rong:r[1],cao:r[2],sl:r[3]}))));return lkXSeedC[k]=a}
 function lkXRender(){const k=lkXKind();if(!k)return;const A=LKX[k]||[],th=qfK(),fl=lkUiFloor($('qg').value),
-R=k==='kd'?A:A.filter(r=>r.thap===th&&lkUiFloor(r.tang)===fl),nS=k==='lc'?3:2,
+R=k==='kd'?kdRowsAt($('qg').value):A.filter(r=>r.thap===th&&lkUiFloor(r.tang)===fl),nS=k==='lc'?3:2,
 n=v=>lkNum(v).toLocaleString('vi-VN'),T=v=>v===''||v==null?'—':n(v),L=(t,c)=>t===''||t==null?'—':n(Math.max(0,lkNum(t)-lkNum(c))),
 P=(c,t)=>t?Math.round(c/t*100)+'%':'0%',sum=f=>R.reduce((a,r)=>a+lkNum(r[f]),0);
 const inp=(r,s)=>`<td class="n">${lkNum(r['c'+s]).toLocaleString('vi-VN')}</td>`;
@@ -892,9 +898,9 @@ if(k&&k!==lkXLast){lkXLast=k;lkXRender();lkXLoad()}else if(k)lkXRender();else{lk
 const lkXDone=()=>{$('lkstat').textContent='· Đồng bộ '+new Date().toLocaleTimeString('vi-VN')};
 async function lkXStart(){if(!ready||!TK)return;
 for(const k of ['lc','vk','kd']){try{const j=await call('luyke_x_sync',{kind:k,items:lkXSeed(k)});LKX[k]=j.rows||[]}catch(e){if(e&&e.code==='session'){showLogin('Phiên đăng nhập hết hạn, hãy đăng nhập lại.');return}$('lkstat').textContent='· Lỗi đồng bộ: '+em(e);return}}
-lkXRender();lkXDone();qfPaintAll();qfLK()}
+lkXRender();lkXDone();kdSync();qfPaintAll();qfLK()}
 async function lkXLoad(){const k=lkXKind();if(!k||!ready||!TK)return;const seq=++lkXSeq;
-try{const j=await call('luyke_x_get',{kind:k});if(seq===lkXSeq){LKX[k]=j.rows||[];if(k===lkXKind()){lkXRender();lkXDone()}qfPaintAll();if(k==='lc'||k==='kd')qfLK()}}
+try{const j=await call('luyke_x_get',{kind:k});if(seq===lkXSeq){LKX[k]=j.rows||[];if(k===lkXKind()){lkXRender();lkXDone()}if(k==='kd')kdSync();qfPaintAll();if(k==='lc'||k==='kd')qfLK()}}
 catch(e){if(e&&e.code==='session'){showLogin('Phiên đăng nhập hết hạn, hãy đăng nhập lại.');return}$('lkstat').textContent='· Lỗi đồng bộ: '+em(e)}}
 function qfChecklist(hm,lo){if(hm==HM_LC)return'4';if(hm==HM_VK)return'3';if((lo||'').includes('Khung phụ')||(lo||'').includes('Grouting'))return'1';if((lo||'').includes('Khung chính'))return'2';return hm==HM_NK?'2':'3'}
 function lkMatrixValue(th,tg,hm,lo,nm){if(hm!==HM_NK)return undefined;
@@ -954,7 +960,7 @@ function qfEntryItems(tgx,k,hm,lo){
   canL(tower).forEach(apartment=>(V[apartment]||[]).forEach(r=>{const old=items.get(r[0]);if(old)old.total+=Number(r[1])||0;else items.set(r[0],{n:r[0],type:'Vách kính phòng tắm',width:'',height:'',total:Number(r[1])||0,can:''})}));
   return Array.from(items.values()).map(item=>{const source=(LKX.vk||[]).find(r=>String(r.thap)===tower&&lkUiFloor(r.tang)===lkUiFloor(tgx)&&String(r.ten)===item.n);return source?Object.assign(item,{width:source.rong,height:source.cao}):item})
  }
- if(hm===HM_KD)return(LKX.kd||[]).map(r=>({n:r.ten,type:'',width:r.rong||'',height:r.cao||'',total:r.sl,can:''}));
+ if(hm===HM_KD)return kdRowsAt(tgx).map(r=>({n:r.ten,type:'',width:r.rong||'',height:r.cao||'',total:r.sl,can:''}));
  return lo?[{n:lo,type:lo,width:'',height:'',total:'',can:''}]:[]
 }
 const qfEntryRow=(item,th,fl,hm,lo,note)=>`<tr data-qf-item data-thap="${esc(th)}" data-floor="${esc(fl)}" data-can="${esc(item.can||'')}" data-hm="${esc(hm)}" data-loai="${esc(lo)}" data-name="${esc(item.n)}" data-total="${item.total===''?'':esc(item.total)}"><td class="n">${esc(th.replace(/^Tháp\s*/i,''))}</td><td class="n">${esc(fl)}</td><td>${esc(item.n)}</td><td>${esc(item.type||'')}</td><td class="n">${item.width===''?'':lkNum(item.width).toLocaleString('vi-VN')}</td><td class="n">${item.height===''?'':lkNum(item.height).toLocaleString('vi-VN')}</td><td class="n">${item.total===''?'':lkNum(item.total).toLocaleString('vi-VN')}</td><td class="n" data-qf-prev>0</td><td><input type="text" inputmode="numeric" autocomplete="off" data-qd aria-label="Nghiệm thu kỳ này ${esc(item.n)}"></td><td><input type="text" autocomplete="off" data-qnote value="${esc(note||'')}" aria-label="Ghi chú ${esc(item.n)}"></td></tr>`;
@@ -1040,7 +1046,7 @@ inputs.forEach((tr,index)=>{
  const tower=towers.find(item=>qQuickNorm(item)===qQuickNorm(info.thap)||qQuickNorm(item.replace(/^Tháp\s*/i,''))===qQuickNorm(info.thap));
  if(!tower){error=`Dòng ${index+1}: không nhận diện được tháp “${info.thap}”.`;return}
  let floor='';
- if(tower===KD_T){floor=[KD_F,'Tầng '+KD_F].find(item=>qQuickNorm(item)===qQuickNorm(info.tang))||''}
+ if(tower===KD_T){floor=[KD_F,'Tầng '+KD_F].concat(kdFloorList().map(n=>'Tầng '+n)).find(item=>qQuickNorm(item)===qQuickNorm(info.tang))||''}
  else{const match=info.tang.match(/^(?:tầng\s*)?0*(\d+)$/i);if(match&&Number(match[1])>0)floor='Tầng '+Number(match[1])}
  if(!floor){error=`Dòng ${index+1}: tầng “${info.tang}” không hợp lệ.`;return}
  const allowed=categories.filter(item=>tower===KD_T?item.n===HM_KD:item.n!==HM_KD);
@@ -1061,7 +1067,7 @@ inputs.forEach((tr,index)=>{
   apartments.forEach(apartment=>(list[apartment]||[]).forEach(item=>{const entry=byName.get(item[0]);if(entry)entry.total+=Number(item[1])||0;else byName.set(item[0],{n:item[0],sub:'',total:Number(item[1])||0,can:''})}));
   items=Array.from(byName.values())
  }else if(category.n===HM_KD){
-  items=(LKX.kd||[]).map(item=>({n:item.ten,sub:'',total:item.sl,can:''}))
+  items=kdRowsAt(floor).map(item=>({n:item.ten,sub:'',total:item.sl,can:''}))
  }
  if(!items.length)items=[{n:lo,sub:'',total:'',can:''}];
  result.push({line:index+1,tower,floor,hm:category.n,lo,info,items})
@@ -1181,7 +1187,7 @@ document.querySelectorAll('#qquick-floors [data-qquick-item]').forEach(row=>{
 qQuickGroups.forEach((group,groupIndex)=>{
  if(!byGroup[groupIndex].length)return;
  const details=qQuickInfo(group.info,group);
- const row=Object.assign(nr(),details,{thap:group.tower,tang:group.floor,can:'',hm:group.hm,loai:group.lo,vt:group.tower===KD_T?KD_T:group.floor+'-'+group.tower,ten:details.ten||'Nghiệm thu '+group.lo,ct:byGroup[groupIndex].join('; '),evid:newEv(),posted:''});
+ const row=Object.assign(nr(),details,{thap:group.tower,tang:group.floor,can:'',hm:group.hm,loai:group.lo,vt:group.tower===KD_T?(group.floor===KD_F?KD_T:KD_T+' - '+group.floor):group.floor+'-'+group.tower,ten:details.ten||'Nghiệm thu '+group.lo,ct:byGroup[groupIndex].join('; '),evid:newEv(),posted:''});
  newRows.push(row)
 });
 if(error){$('qquick-message').textContent=error;return}
@@ -1301,7 +1307,7 @@ L.sort((x,y)=>fn(x.fl)-fn(y.fl));
 const G={};L.forEach(x=>(G[x.cn]=G[x.cn]||[]).push((multi?x.fl+' :: ':'')+x.txt));
 const flab=multi?'Tầng '+used.map(x=>fn(x)).join(', '):used[0],ks=Object.keys(G).sort();
 ks.forEach(c=>{const r=Object.assign(nr(),QI);
-Object.assign(r,{thap:th,tang:used[0],can:c,hm:hm,loai:lo,vt:th==KD_T?KD_T:flab+'-'+th+(c?' - '+c:''),ten:($('qten').value||'').trim()||'Nghiệm thu '+lo,ct:G[c].join('; '),ghichu:JSON.stringify(notes),evid:newEv(),posted:''});S.rows.push(r)});
+Object.assign(r,{thap:th,tang:used[0],can:c,hm:hm,loai:lo,vt:th==KD_T?(used[0]===KD_F?KD_T:KD_T+' - '+used[0]):flab+'-'+th+(c?' - '+c:''),ten:($('qten').value||'').trim()||'Nghiệm thu '+lo,ct:G[c].join('; '),ghichu:JSON.stringify(notes),evid:newEv(),posted:''});S.rows.push(r)});
 const n=S.rows.length;if(n>VB){const w=VB-VA;VB=n;VA=Math.max(1,VB-w)}cur=n-1;
 qTenT=false;sv();ui();qfItems();qfMsg('Đang ghi lũy kế và gửi Google… ('+ks.length+' biên bản'+(multi?', gộp '+used.length+' tầng':'')+')');qfOK=true};
 function sendAll(){doPush()}
