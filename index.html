@@ -1612,6 +1612,62 @@ function aiBuildPrompt(question, context) {
     'Hướng dẫn phản hồi: nếu đáp án không có dữ liệu, hãy trả lời “Tôi chưa có dữ liệu đủ để xác định.”'
   ].join('\n');
 }
+async function askAIWithOptimizedData(userQuery) {
+    const webAppUrl = "URL_GOOGLE_APPS_SCRIPT_CỦA_BẠN";
+    
+    // 1. Gọi backend lấy dữ liệu đã được lọc sẵn từ các sheet
+    const response = await fetch(`${webAppUrl}?action=getDataQuery&q=${encodeURIComponent(userQuery)}`);
+    const sheetData = await response.json();
+    
+    // 2. Đóng gói dữ liệu tối ưu đưa vào Prompt cho Gemini
+    const optimizedContext = `
+      - Dữ liệu Lũy kế: ${JSON.stringify(sheetData.luyKe)}
+      - Dữ liệu Data chính: ${JSON.stringify(sheetData.data)}
+      - Dữ liệu Lịch sử lũy kế: ${JSON.stringify(sheetData.lichSu)}
+    `;
+    
+    const finalPrompt = `Dựa vào dữ liệu hệ thống nghiệm thu sau:\n${optimizedContext}\n\nHãy trả lời câu hỏi: ${userQuery}`;
+    
+    // 3. Gọi Gemini API với cơ chế tự động thử lại (Retry)
+    return await callGeminiWithRetry(finalPrompt);
+}
+
+// Hàm gọi Gemini kèm chống quá tải (Retry Exponential Backoff)
+async function callGeminiWithRetry(promptText, maxRetries = 3) {
+    const apiKey = "API_KEY_CỦA_BẠN";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    
+    const payload = {
+        contents: [{ parts: [{ text: promptText }] }]
+    };
+
+    let delay = 2000;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            let res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.status === 429 || res.status === 503) {
+                if (attempt === maxRetries) throw new Error("Hệ thống đang quá tải, vui lòng thử lại sau.");
+                await new Promise(r => setTimeout(r, delay));
+                delay *= 2;
+                continue;
+            }
+
+            if (!res.ok) throw new Error(`Lỗi kết nối: ${res.status}`);
+
+            let json = await res.json();
+            return json.candidates[0].content.parts[0].text;
+        } catch (err) {
+            if (attempt === maxRetries) throw err;
+            await new Promise(r => setTimeout(r, delay));
+            delay *= 2;
+        }
+    }
+}
 
 function aiSummarizeLocal(question) {
   const q = aiNormalize(question);
